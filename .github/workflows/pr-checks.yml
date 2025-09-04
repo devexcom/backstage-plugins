@@ -1,0 +1,131 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  changeset-check:
+    name: Changeset Check
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'renovate[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check for changesets
+        run: |
+          # Check if this PR has changes in workspaces directory
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+          WORKSPACE_CHANGES=$(echo "$CHANGED_FILES" | grep "^workspaces/" || true)
+          
+          if [ -n "$WORKSPACE_CHANGES" ]; then
+            echo "Changes detected in workspaces directory"
+            echo "Checking for changesets..."
+            
+            # Check if there are any changeset files
+            CHANGESET_FILES=$(echo "$CHANGED_FILES" | grep "^\.changeset/.*\.md$" || true)
+            
+            if [ -z "$CHANGESET_FILES" ]; then
+              echo "❌ No changesets found for workspace changes"
+              echo "Please run 'yarn changeset' to create a changeset for your changes"
+              exit 1
+            else
+              echo "✅ Changesets found: $CHANGESET_FILES"
+            fi
+          else
+            echo "No changes in workspaces directory, skipping changeset check"
+          fi
+
+  pr-title-check:
+    name: PR Title Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Configure which types are allowed (newline delimited)
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+          # Configure which scopes are allowed
+          scopes: |
+            analytics
+            monitoring
+            security
+            data
+            scaffolder-actions
+            deps
+            repo
+          requireScope: false
+
+  plugin-validation:
+    name: Plugin Validation  
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Validate plugin structure
+        run: |
+          # Find all package.json files in workspaces
+          find workspaces -name "package.json" -type f | while read pkg; do
+            echo "Validating plugin: $pkg"
+            
+            # Check required fields in package.json
+            if ! jq -e '.name' "$pkg" >/dev/null 2>&1; then
+              echo "❌ Missing 'name' field in $pkg"
+              exit 1
+            fi
+            
+            if ! jq -e '.version' "$pkg" >/dev/null 2>&1; then
+              echo "❌ Missing 'version' field in $pkg"  
+              exit 1
+            fi
+            
+            if ! jq -e '.description' "$pkg" >/dev/null 2>&1; then
+              echo "❌ Missing 'description' field in $pkg"
+              exit 1
+            fi
+            
+            # Check for README.md in plugin directory
+            plugin_dir=$(dirname "$pkg")
+            if [ ! -f "$plugin_dir/README.md" ]; then
+              echo "❌ Missing README.md in $plugin_dir"
+              exit 1
+            fi
+            
+            echo "✅ Plugin validation passed for $pkg"
+          done

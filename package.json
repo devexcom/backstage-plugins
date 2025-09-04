@@ -1,0 +1,68 @@
+{
+  "name": "backstage-plugins",
+  "private": true,
+  "workspaces": [
+    "workspaces/*"
+  ],
+  "engines": {
+    "node": "18 || 20"
+  },
+  "scripts": {
+    "dev": "backstage-cli package start",
+    "start": "backstage-cli package start",
+    "build": "backstage-cli package build",
+    "build:all": "lerna run build",
+    "lint": "backstage-cli package lint",
+    "lint:fix": "backstage-cli package lint --fix",
+    "lint:all": "lerna run lint",
+    "test": "backstage-cli package test",
+    "test:all": "lerna run test",
+    "clean": "backstage-cli package clean",
+    "clean:all": "lerna run clean",
+    "tsc:full": "lerna run tsc:full",
+    "diff": "backstage-cli package diff",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "prepare": "husky install",
+    "create-plugin": "./scripts/create-plugin.sh"
+  },
+  "devDependencies": {
+    "@backstage/cli": "^0.26.0",
+    "@changesets/cli": "^2.27.1",
+    "@commitlint/cli": "^18.4.0",
+    "@commitlint/config-conventional": "^18.4.0",
+    "@types/node": "^18.0.0",
+    "concurrently": "^8.0.0",
+    "husky": "^8.0.3",
+    "lerna": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "typescript": "~5.2.0"
+  },
+  "resolutions": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ]
+  },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devexcom/backstage-plugins.git"
+  },
+  "keywords": [
+    "backstage",
+    "plugins"
+  ]
+}
