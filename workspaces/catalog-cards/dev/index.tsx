@@ -1,7 +1,12 @@
 import React from 'react';
 import { createDevApp } from '@backstage/dev-utils';
 import { catalogCardsPlugin, CatalogCardsContent } from '../src/plugin';
-import { EntityListProvider, CatalogApi, catalogApiRef } from '@backstage/plugin-catalog-react';
+import {
+  EntityListProvider,
+  CatalogApi,
+  catalogApiRef,
+  GetEntitiesRequest,
+} from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 
 // Mock catalog data for development
@@ -14,7 +19,7 @@ const mockEntities: Entity[] = Array.from({ length: 100 }, (_, i) => ({
     description: `This is a sample entity with a longer description to test the expand/collapse functionality. It contains multiple sentences to demonstrate how the truncation works in practice.`,
     tags: [`tag-${(i % 5) + 1}`, `category-${(i % 3) + 1}`],
     annotations: {
-      'backstage.io/techdocs-ref': i % 4 === 0 ? 'dir:.' : undefined,
+      'backstage.io/techdocs-ref': i % 4 === 0 ? 'dir:.' : '',
       'backstage.io/source-location': `https://github.com/example/repo-${i + 1}`,
     },
   },
@@ -39,14 +44,15 @@ const mockEntities: Entity[] = Array.from({ length: 100 }, (_, i) => ({
 
 // Mock catalog API
 const mockCatalogApi: Partial<CatalogApi> = {
-  getEntities: async ({ limit = 20, offset = 0 }) => {
+  getEntities: async (request?: GetEntitiesRequest) => {
+    const { limit = 20, offset = 0 } = request || {};
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const start = offset || 0;
     const end = start + limit;
     const items = mockEntities.slice(start, end);
-    
+
     return {
       items,
       totalItems: mockEntities.length,
@@ -54,10 +60,12 @@ const mockCatalogApi: Partial<CatalogApi> = {
     };
   },
   getEntityByRef: async (entityRef) => {
-    const entity = mockEntities.find(e => 
-      `${e.kind}:${e.metadata.namespace || 'default'}/${e.metadata.name}` === entityRef
+    const entity = mockEntities.find(
+      (e) =>
+        `${e.kind}:${e.metadata.namespace || 'default'}/${e.metadata.name}` ===
+        entityRef,
     );
-    return entity || null;
+    return entity || undefined;
   },
 };
 

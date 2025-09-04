@@ -1,6 +1,5 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import {
-  Grid,
   Box,
   CircularProgress,
   Typography,
@@ -16,12 +15,12 @@ import { Progress, EmptyState } from '@backstage/core-components';
 import { EntityCard } from './EntityCard';
 import { CatalogCardGridProps } from '../types';
 
-const useStyles = makeStyles(theme => ({
-  container: {
+const useStyles = makeStyles((theme) => ({
+  'container': {
     width: '100%',
     height: '100%',
   },
-  grid: {
+  'grid': {
     display: 'grid',
     gap: theme.spacing(2),
     padding: theme.spacing(1),
@@ -35,7 +34,7 @@ const useStyles = makeStyles(theme => ({
       gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
     },
   },
-  gridCompact: {
+  'gridCompact': {
     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
     [theme.breakpoints.down('sm')]: {
       gridTemplateColumns: '1fr',
@@ -44,31 +43,31 @@ const useStyles = makeStyles(theme => ({
       gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
     },
   },
-  loadingContainer: {
+  'loadingContainer': {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.spacing(4),
   },
-  errorContainer: {
+  'errorContainer': {
     margin: theme.spacing(2),
   },
-  emptyContainer: {
+  'emptyContainer': {
     padding: theme.spacing(4),
     textAlign: 'center',
   },
-  loadMoreSentinel: {
+  'loadMoreSentinel': {
     height: 100,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  virtualGrid: {
+  'virtualGrid': {
     '& [data-index]': {
       padding: theme.spacing(1),
     },
   },
-  skeletonCard: {
+  'skeletonCard': {
     height: 300,
     backgroundColor: theme.palette.grey[100],
     borderRadius: theme.shape.borderRadius,
@@ -114,36 +113,46 @@ const VirtualCard: React.FC<VirtualCardProps> = ({ index, style, data }) => {
     hasNextPage,
     loadMore,
   } = data;
-  
+
   const entityIndex = index * columnsCount;
   const isLoadMoreIndex = entityIndex >= entities.length;
-  
+
   // Trigger load more when approaching the end
   useEffect(() => {
     if (isLoadMoreIndex && hasNextPage && entities.length > 0) {
       loadMore();
     }
   }, [isLoadMoreIndex, hasNextPage, entities.length, loadMore]);
-  
+
   if (isLoadMoreIndex) {
     return (
       <div style={style}>
-        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100%"
+        >
           <CircularProgress size={24} />
         </Box>
       </div>
     );
   }
-  
+
   return (
     <div style={style}>
       <Box display="flex" gap={2} height="100%">
         {Array.from({ length: columnsCount }, (_, colIndex) => {
           const entity = entities[entityIndex + colIndex];
           if (!entity) return <div key={colIndex} />;
-          
+
           return (
-            <Box key={entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`} flex={1}>
+            <Box
+              key={
+                entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`
+              }
+              flex={1}
+            >
               <EntityCard
                 entity={entity}
                 density={density}
@@ -175,7 +184,7 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  
+
   // Calculate responsive columns
   const columnsCount = useMemo(() => {
     if (columns) return columns;
@@ -183,24 +192,24 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
     if (isTablet) return 2;
     return 3;
   }, [columns, isMobile, isTablet]);
-  
+
   // Intersection observer for infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current || !onLoadMore || !hasNextPage || loading) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           onLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
-    
+
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
   }, [onLoadMore, hasNextPage, loading]);
-  
+
   // Error state
   if (error) {
     return (
@@ -212,7 +221,7 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
       </div>
     );
   }
-  
+
   // Empty state
   if (!loading && entities.length === 0) {
     return (
@@ -225,12 +234,15 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
       </div>
     );
   }
-  
+
   // Virtualized grid for large datasets
   if (enableVirtualization && entities.length > 100) {
-    const cardHeight = density === 'compact' ? CARD_HEIGHT_COMPACT : CARD_HEIGHT;
-    const rowCount = Math.ceil((entities.length + (hasNextPage ? 1 : 0)) / columnsCount);
-    
+    const cardHeight =
+      density === 'compact' ? CARD_HEIGHT_COMPACT : CARD_HEIGHT;
+    const rowCount = Math.ceil(
+      (entities.length + (hasNextPage ? 1 : 0)) / columnsCount,
+    );
+
     const itemData = {
       entities,
       columnsCount,
@@ -240,11 +252,13 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
       hasNextPage,
       loadMore: onLoadMore || (() => {}),
     };
-    
+
     return (
       <div className={classes.container}>
         <InfiniteLoader
-          isItemLoaded={(index) => index < Math.ceil(entities.length / columnsCount)}
+          isItemLoaded={(index) =>
+            index < Math.ceil(entities.length / columnsCount)
+          }
           itemCount={hasNextPage ? rowCount + 1 : rowCount}
           loadMoreItems={onLoadMore || (() => Promise.resolve())}
         >
@@ -258,7 +272,10 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
               rowCount={rowCount}
               rowHeight={cardHeight + 32} // Add gap
               itemData={itemData}
-              onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) =>
+              onItemsRendered={({
+                visibleRowStartIndex,
+                visibleRowStopIndex,
+              }) =>
                 onItemsRendered({
                   startIndex: visibleRowStartIndex,
                   stopIndex: visibleRowStopIndex,
@@ -272,31 +289,41 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
       </div>
     );
   }
-  
+
   // Regular grid with infinite scroll
   return (
     <div className={classes.container}>
-      <div className={`${classes.grid} ${density === 'compact' ? classes.gridCompact : ''}`}>
+      <div
+        className={`${classes.grid} ${density === 'compact' ? classes.gridCompact : ''}`}
+      >
         {entities.map((entity) => (
           <EntityCard
-            key={entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`}
+            key={
+              entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`
+            }
             entity={entity}
             density={density}
             expandDescriptionDefault={expandDescriptionsDefault}
             quickActions={quickActions}
           />
         ))}
-        
+
         {/* Loading skeletons */}
         {loading && (
           <>
-            {Array.from({ length: Math.min(6, columnsCount * 2) }, (_, index) => (
-              <div key={`skeleton-${index}`} className={classes.skeletonCard} />
-            ))}
+            {Array.from(
+              { length: Math.min(6, columnsCount * 2) },
+              (_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  className={classes.skeletonCard}
+                />
+              ),
+            )}
           </>
         )}
       </div>
-      
+
       {/* Load more sentinel */}
       {hasNextPage && !loading && (
         <div ref={loadMoreRef} className={classes.loadMoreSentinel}>
@@ -306,7 +333,7 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
           </Typography>
         </div>
       )}
-      
+
       {/* Loading indicator */}
       {loading && entities.length === 0 && (
         <div className={classes.loadingContainer}>

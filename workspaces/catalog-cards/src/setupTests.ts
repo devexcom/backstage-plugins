@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom';
 
 // Mock IntersectionObserver for infinite scroll tests
-class MockIntersectionObserver {
+class MockIntersectionObserver implements IntersectionObserver {
   callback: IntersectionObserverCallback;
   elements: Set<Element> = new Set();
+  root: Element | Document | null = null;
+  rootMargin: string = '0px';
+  thresholds: ReadonlyArray<number> = [0];
 
   constructor(callback: IntersectionObserverCallback) {
     this.callback = callback;
@@ -21,9 +24,16 @@ class MockIntersectionObserver {
     this.elements.clear();
   }
 
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+
   // Test utility to trigger intersection
   trigger(entries: Partial<IntersectionObserverEntry>[]) {
-    this.callback(entries as IntersectionObserverEntry[], this);
+    this.callback(
+      entries as IntersectionObserverEntry[],
+      this as IntersectionObserver,
+    );
   }
 }
 
@@ -55,7 +65,7 @@ Object.defineProperty(window, 'open', {
 // Mock window.matchMedia for responsive tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,

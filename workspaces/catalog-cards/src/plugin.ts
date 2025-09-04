@@ -17,7 +17,9 @@ export const CatalogCardsContent = catalogCardsPlugin.provide(
     name: 'CatalogCardsContent',
     component: {
       lazy: () =>
-        import('./components/CatalogCardsContent').then(m => m.CatalogCardsContent),
+        import('./components/CatalogCardsContent').then(
+          (m) => m.CatalogCardsContent as any,
+        ),
     },
   }),
 );
@@ -27,7 +29,9 @@ export const CatalogViewToggle = catalogCardsPlugin.provide(
     name: 'CatalogViewToggle',
     component: {
       lazy: () =>
-        import('./components/CatalogViewToggle').then(m => m.CatalogViewToggle),
+        import('./components/CatalogViewToggle').then(
+          (m) => m.CatalogViewToggle as any,
+        ),
     },
   }),
 );
@@ -37,7 +41,9 @@ export const CatalogCardGrid = catalogCardsPlugin.provide(
     name: 'CatalogCardGrid',
     component: {
       lazy: () =>
-        import('./components/CatalogCardGrid').then(m => m.CatalogCardGrid),
+        import('./components/CatalogCardGrid').then(
+          (m) => m.CatalogCardGrid as any,
+        ),
     },
   }),
 );

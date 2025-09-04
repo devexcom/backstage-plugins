@@ -1,14 +1,29 @@
 module.exports = {
-  extends: ['@backstage'],
+  root: true,
+  extends: ['eslint:recommended'],
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+  env: {
+    browser: true,
+    node: true,
+    es6: true,
+    jest: true,
+  },
   rules: {
-    '@typescript-eslint/no-shadow': 'off',
-    'import/no-extraneous-dependencies': 'off',
+    'no-unused-vars': 'off',
+    'no-undef': 'off',
+    'prefer-const': 'off',
   },
   overrides: [
     {
       files: ['**/*.test.*'],
-      rules: {
-        'jest/expect-expect': 'off',
+      env: {
+        jest: true,
       },
     },
   ],
