@@ -8,10 +8,6 @@ updates:
       day: "monday"
       time: "04:00"
     open-pull-requests-limit: 10
-    reviewers:
-      - "your-team"
-    assignees:
-      - "your-team"
     commit-message:
       prefix: "chore(deps):"
       include: "scope"
@@ -39,3 +35,5 @@ updates:
     commit-message:
       prefix: "chore(ci):"
       include: "scope"
+
+  #dependbot:ignore
