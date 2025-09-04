@@ -40,9 +40,15 @@ jobs:
         uses: changesets/action@v1
         with:
           version: yarn changeset version
-          publish: yarn changeset publish
+          publish: yarn changeset publish --access public
           title: 'Version Packages'
           commit: 'Version Packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          echo "🎉 Published packages:"
+          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "- \(.name)@\(.version)"'

@@ -26,26 +26,30 @@ jobs:
 
       - name: Check for changesets
         run: |
-          # Check if this PR has changes in workspaces directory
+          # Check if this PR has changes in workspaces directory (plugin changes)
           CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-          WORKSPACE_CHANGES=$(echo "$CHANGED_FILES" | grep "^workspaces/" || true)
-          
-          if [ -n "$WORKSPACE_CHANGES" ]; then
-            echo "Changes detected in workspaces directory"
+          PLUGIN_CHANGES=$(echo "$CHANGED_FILES" | grep "^workspaces/" || true)
+
+          if [ -n "$PLUGIN_CHANGES" ]; then
+            echo "Changes detected in plugin directories:"
+            echo "$PLUGIN_CHANGES"
+            echo ""
             echo "Checking for changesets..."
             
             # Check if there are any changeset files
             CHANGESET_FILES=$(echo "$CHANGED_FILES" | grep "^\.changeset/.*\.md$" || true)
             
             if [ -z "$CHANGESET_FILES" ]; then
-              echo "❌ No changesets found for workspace changes"
-              echo "Please run 'yarn changeset' to create a changeset for your changes"
+              echo "❌ No changesets found for plugin changes"
+              echo ""
+              echo "Please run 'yarn changeset' to create a changeset for your plugin changes."
+              echo "This ensures proper versioning and release notes for changed plugins."
               exit 1
             else
               echo "✅ Changesets found: $CHANGESET_FILES"
             fi
           else
-            echo "No changes in workspaces directory, skipping changeset check"
+            echo "No changes in plugin directories, skipping changeset check"
           fi
 
   pr-title-check:
@@ -71,17 +75,15 @@ jobs:
             chore
           # Configure which scopes are allowed
           scopes: |
-            analytics
-            monitoring
-            security
-            data
-            scaffolder-actions
+            catalog-cards
+            linkedin-learning-card
             deps
+            ci
             repo
           requireScope: false
 
   plugin-validation:
-    name: Plugin Validation  
+    name: Plugin Validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

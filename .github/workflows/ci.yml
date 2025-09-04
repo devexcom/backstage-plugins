@@ -55,7 +55,8 @@ jobs:
     name: Build & Test Matrix
     runs-on: ubuntu-latest
     outputs:
-      changed-workspaces: ${{ steps.changed-workspaces.outputs.changed }}
+      changed-plugins: ${{ steps.changed-plugins.outputs.changed }}
+      has-changes: ${{ steps.changed-plugins.outputs.has-changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,33 +72,42 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Get changed workspaces
-        id: changed-workspaces
+      - name: Get changed plugins
+        id: changed-plugins
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
           else
             BASE_SHA="${{ github.event.before }}"
           fi
-          
+
           # Get list of changed files
           CHANGED_FILES=$(git diff --name-only $BASE_SHA...HEAD)
-          
-          # Extract workspace directories that have changes
-          CHANGED_WORKSPACES=$(echo "$CHANGED_FILES" | grep "^workspaces/" | cut -d'/' -f2 | sort -u | jq -R . | jq -s .)
-          
-          echo "changed=$CHANGED_WORKSPACES" >> $GITHUB_OUTPUT
-          echo "Changed workspaces: $CHANGED_WORKSPACES"
+          echo "Changed files: $CHANGED_FILES"
 
-  workspace-tests:
-    name: Test Workspace
+          # Extract plugin directories that have changes
+          CHANGED_PLUGINS=$(echo "$CHANGED_FILES" | grep "^workspaces/" | cut -d'/' -f2 | sort -u)
+
+          if [ -z "$CHANGED_PLUGINS" ]; then
+            echo "changed=[]" >> $GITHUB_OUTPUT
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+            echo "No plugin changes detected"
+          else
+            CHANGED_PLUGINS_JSON=$(echo "$CHANGED_PLUGINS" | jq -R . | jq -s .)
+            echo "changed=$CHANGED_PLUGINS_JSON" >> $GITHUB_OUTPUT
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+            echo "Changed plugins: $CHANGED_PLUGINS"
+          fi
+
+  plugin-tests:
+    name: Test Plugin
     runs-on: ubuntu-latest
     needs: build-test-matrix
-    if: needs.build-test-matrix.outputs.changed-workspaces != '[]'
+    if: needs.build-test-matrix.outputs.has-changes == 'true'
     strategy:
       fail-fast: false
       matrix:
-        workspace: ${{ fromJson(needs.build-test-matrix.outputs.changed-workspaces) }}
+        plugin: ${{ fromJson(needs.build-test-matrix.outputs.changed-plugins) }}
 
     steps:
       - name: Checkout
@@ -112,11 +122,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build workspace
-        run: yarn workspace ${{ matrix.workspace }} build
+      - name: Build plugin
+        run: yarn workspace ${{ matrix.plugin }} build
 
-      - name: Test workspace
-        run: yarn workspace ${{ matrix.workspace }} test
+      - name: Test plugin
+        run: yarn workspace ${{ matrix.plugin }} test
 
-      - name: Lint workspace
-        run: yarn workspace ${{ matrix.workspace }} lint
+      - name: Lint plugin
+        run: yarn workspace ${{ matrix.plugin }} lint
