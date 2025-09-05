@@ -93,7 +93,7 @@ jobs:
             echo "has-changes=false" >> $GITHUB_OUTPUT
             echo "No plugin changes detected"
           else
-            CHANGED_PLUGINS_JSON=$(echo "$CHANGED_PLUGINS" | jq -R . | jq -s .)
+            CHANGED_PLUGINS_JSON=$(echo "$CHANGED_PLUGINS" | jq -R -s -c 'split("\n")[:-1]')
             echo "changed=$CHANGED_PLUGINS_JSON" >> $GITHUB_OUTPUT
             echo "has-changes=true" >> $GITHUB_OUTPUT
             echo "Changed plugins: $CHANGED_PLUGINS"
