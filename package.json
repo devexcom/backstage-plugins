@@ -48,17 +48,21 @@
   "resolutions": {
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@azure/identity": "^3.4.2"
+    "@azure/identity": "^3.4.2",
+    "@azure/core-auth": "^1.7.2",
+    "@azure/core-client": "^1.8.2",
+    "@azure/core-rest-pipeline": "^1.15.2",
+    "@azure/core-lro": "^2.6.2",
+    "@azure/core-paging": "^1.5.2",
+    "@azure/msal-node": "^2.9.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
-      "eslint --fix",
       "prettier --write"
     ],
     "*.{json,md,yaml,yml}": [
       "prettier --write"
-    ],
-    "tsconfig.json": []
+    ]
   },
   "commitlint": {
     "extends": [
