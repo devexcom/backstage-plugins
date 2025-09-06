@@ -55,6 +55,7 @@ jobs:
   pr-title-check:
     name: PR Title Check
     runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
       - name: Check PR title format
         uses: amannn/action-semantic-pull-request@v5
@@ -78,9 +79,12 @@ jobs:
             catalog-cards
             linkedin-learning-card
             deps
+            deps-dev
             ci
             repo
           requireScope: false
+          # Skip validation for dependabot PRs with malformed titles
+          headerPattern: '^(\w*)(?:\(([\w\$\.\-\* ]*)\))?\: (.*)$'
 
   plugin-validation:
     name: Plugin Validation
@@ -102,8 +106,8 @@ jobs:
 
       - name: Validate plugin structure
         run: |
-          # Find all package.json files in workspaces
-          find workspaces -name "package.json" -type f | while read pkg; do
+          # Find all package.json files in workspaces, excluding node_modules
+          find workspaces -name "package.json" -type f -not -path "*/node_modules/*" | while read pkg; do
             echo "Validating plugin: $pkg"
             
             # Check required fields in package.json

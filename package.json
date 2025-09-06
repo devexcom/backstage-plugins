@@ -55,6 +55,7 @@
     "@azure/core-lro": "^2.6.2",
     "@azure/core-paging": "^1.5.2",
     "@azure/core-tracing": "^1.1.2",
+    "@azure/core-util": "^1.9.2",
     "@azure/msal-node": "^2.9.2"
   },
   "lint-staged": {
