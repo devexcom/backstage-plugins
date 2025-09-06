@@ -17,11 +17,13 @@ Plugins are organized directly under the `workspaces/` directory, with each plug
 ## Getting Started
 
 1. Install dependencies:
+
    ```bash
    yarn install
    ```
 
 2. Build all plugins:
+
    ```bash
    yarn build
    ```
@@ -41,7 +43,7 @@ Use the provided script to create a new plugin:
 # Create a frontend plugin
 ./scripts/create-plugin.sh -n my-awesome-plugin
 
-# Create a backend plugin  
+# Create a backend plugin
 ./scripts/create-plugin.sh -n my-backend-service -t backend
 
 # Create a scaffolder action
@@ -49,6 +51,7 @@ Use the provided script to create a new plugin:
 ```
 
 The script will:
+
 - Create the plugin directory under `workspaces/`
 - Set up the basic plugin structure
 - Configure the `@devexcom` npm scope
@@ -59,6 +62,7 @@ The script will:
 This repository uses [Changesets](https://github.com/changesets/changesets) for version management:
 
 1. Create a changeset:
+
    ```bash
    yarn changeset
    ```
@@ -80,7 +84,8 @@ Plugins are organized as individual packages under the `workspaces/` directory:
 - **[future-plugins]**: Additional plugins as they are developed
 
 Each plugin is:
+
 - **Self-contained** with its own package.json and dependencies
 - **Independently versioned** using Changesets
 - **Published separately** to npm under the `@devexcom` scope
-- **Fully documented** with setup and usage instructions
+- **Fully documented** with setup and usage instructions# Test commit to trigger workflow
