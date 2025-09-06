@@ -33,7 +33,12 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Azure SDK packages have Node 20+ engine requirements, ignore for Node 18 testing
+          if [[ "${{ matrix.node-version }}" == "18.x" ]]; then
+            yarn config set ignore-engines true
+          fi
+          yarn install --frozen-lockfile
 
       - name: Lint
         run: yarn lint
@@ -70,7 +75,12 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Azure SDK packages have Node 20+ engine requirements, ignore for Node 18 testing
+          if [[ "${{ matrix.node-version }}" == "18.x" ]]; then
+            yarn config set ignore-engines true
+          fi
+          yarn install --frozen-lockfile
 
       - name: Get changed plugins
         id: changed-plugins
@@ -120,7 +130,12 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Azure SDK packages have Node 20+ engine requirements, ignore for Node 18 testing
+          if [[ "${{ matrix.node-version }}" == "18.x" ]]; then
+            yarn config set ignore-engines true
+          fi
+          yarn install --frozen-lockfile
 
       - name: Build plugin
         run: yarn workspace ${{ matrix.plugin }} build

@@ -22,7 +22,10 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Azure SDK packages have Node 20+ engine requirements, ignore for CI compatibility
+          yarn config set ignore-engines true  
+          yarn install --frozen-lockfile
 
       - name: Check for changesets
         run: |
@@ -102,7 +105,10 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Azure SDK packages have Node 20+ engine requirements, ignore for CI compatibility
+          yarn config set ignore-engines true  
+          yarn install --frozen-lockfile
 
       - name: Validate plugin structure
         run: |
