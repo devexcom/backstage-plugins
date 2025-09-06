@@ -9,9 +9,7 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx|mjs|cjs)$': '@backstage/cli/config/jestSwcTransform',
   },
   transformIgnorePatterns: ['/node_modules/(?!@backstage)/.*\\.js$'],
-  setupFilesAfterEnv: [
-    '/home/naveen/projects/devexcom/workspaces/catalog-cards/src/setupTests.ts',
-  ],
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(svg|png|jpg|jpeg|gif)$': 'jest-transform-stub',
