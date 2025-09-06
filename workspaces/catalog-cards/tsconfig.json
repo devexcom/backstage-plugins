@@ -1,8 +1,5 @@
 {
   "extends": "@backstage/cli/config/tsconfig.json",
   "include": ["src/**/*", "dev/**/*"],
-  "exclude": ["node_modules", "dist", "dist-types"],
-  "compilerOptions": {
-    "outDir": "../../dist-types/workspaces/catalog-cards"
-  }
+  "exclude": ["node_modules", "dist", "dist-types"]
 }
