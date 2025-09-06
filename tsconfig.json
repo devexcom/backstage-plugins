@@ -1,0 +1,13 @@
+{
+  "extends": "@backstage/cli/config/tsconfig.json",
+  "include": ["workspaces/*/src"],
+  "exclude": ["node_modules", "**/dist", "**/dist-types"],
+  "compilerOptions": {
+    "outDir": "dist-types",
+    "rootDir": ".",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "strict": false
+  }
+}
