@@ -15,6 +15,7 @@ const mockBucket = {
   set: jest.fn(),
   remove: jest.fn(),
   observe$: jest.fn(),
+  snapshot: jest.fn(),
 };
 
 const wrapper = ({
@@ -34,6 +35,7 @@ describe('useCatalogViewState', () => {
     jest.clearAllMocks();
     mockStorageApi.forBucket.mockReturnValue(mockBucket);
     mockBucket.get.mockReturnValue(undefined);
+    mockBucket.snapshot.mockReturnValue({ value: undefined });
   });
 
   it('should initialize with default view', () => {
@@ -62,13 +64,13 @@ describe('useCatalogViewState', () => {
   });
 
   it('should read view from storage when URL has no view param', () => {
-    mockBucket.get.mockReturnValue('cards');
+    mockBucket.snapshot.mockReturnValue({ value: 'cards' });
 
     const { result } = renderHook(() => useCatalogViewState(), { wrapper });
 
     expect(result.current.view).toBe('cards');
     expect(mockStorageApi.forBucket).toHaveBeenCalledWith('catalog-cards');
-    expect(mockBucket.get).toHaveBeenCalledWith('view');
+    expect(mockBucket.snapshot).toHaveBeenCalledWith('view');
   });
 
   it('should update view and URL when setView is called', () => {
