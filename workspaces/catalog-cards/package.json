@@ -1,6 +1,6 @@
 {
   "name": "@devexcom/plugin-catalog-cards",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A drop-in Backstage plugin that adds a rich card view to the catalog with infinite scroll and view toggle",
   "main": "src/index.ts",
   "types": "src/index.ts",
