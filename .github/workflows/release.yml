@@ -48,8 +48,18 @@ jobs:
       - name: Build packages
         run: yarn build:all
 
+      - name: Check for changesets
+        id: changesets-check
+        run: |
+          if yarn changeset status --json | jq -e '.releases | length > 0' > /dev/null 2>&1; then
+            echo "has-changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-changesets=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release Pull Request or Publish
         id: changesets
+        if: steps.changesets-check.outputs.has-changesets == 'true'
         uses: changesets/action@v1
         with:
           version: yarn changeset version
