@@ -55,7 +55,7 @@
     "@types/react": "^17.0.2",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-window": "^1.8.8",
-    "msw": "^1.0.0"
+    "msw": "^2.11.1"
   },
   "files": [
     "dist"
