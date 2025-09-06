@@ -89,21 +89,30 @@ const useStyles = makeStyles((theme) => ({
 const CARD_HEIGHT = 320;
 const CARD_HEIGHT_COMPACT = 280;
 
-interface VirtualCardProps {
-  index: number;
-  style: React.CSSProperties;
-  data: {
-    entities: Entity[];
-    columnsCount: number;
-    density: 'compact' | 'comfortable';
-    onCardClick?: (entity: Entity) => void;
-    quickActions?: any[];
-    hasNextPage: boolean;
-    loadMore: () => void;
-  };
+interface VirtualCardData {
+  entities: Entity[];
+  columnsCount: number;
+  density: 'compact' | 'comfortable';
+  onCardClick?: (entity: Entity) => void;
+  quickActions?: any[];
+  hasNextPage: boolean;
+  loadMore: () => void;
 }
 
-const VirtualCard: React.FC<VirtualCardProps> = ({ index, style, data }) => {
+interface GridVirtualCardProps {
+  columnIndex: number;
+  rowIndex: number;
+  style: React.CSSProperties;
+  data: VirtualCardData;
+}
+
+const VirtualCard: React.FC<GridVirtualCardProps> = ({
+  columnIndex,
+  rowIndex,
+  style,
+  data,
+}) => {
+  const index = rowIndex;
   const {
     entities,
     columnsCount,
@@ -141,7 +150,7 @@ const VirtualCard: React.FC<VirtualCardProps> = ({ index, style, data }) => {
 
   return (
     <div style={style}>
-      <Box display="flex" gap={2} height="100%">
+      <Box display="flex" style={{ gap: '16px' }} height="100%">
         {Array.from({ length: columnsCount }, (_, colIndex) => {
           const entity = entities[entityIndex + colIndex];
           if (!entity) return <div key={colIndex} />;
@@ -267,8 +276,9 @@ export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
               ref={ref}
               className={classes.virtualGrid}
               height={600} // Fixed height for virtualization
-              width="100%"
+              width={1200} // Fixed width for virtualization
               columnCount={1}
+              columnWidth={1200}
               rowCount={rowCount}
               rowHeight={cardHeight + 32} // Add gap
               itemData={itemData}

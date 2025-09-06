@@ -73,13 +73,21 @@ export function useInfiniteEntityList(
         setOffset(currentOffset + newEntities.length);
 
         // Track analytics
-        analyticsApi.captureEvent('catalog_cards_load');
+        analyticsApi.captureEvent({
+          action: 'catalog_cards_load',
+          subject: 'catalog_cards',
+          context: {} as any,
+        });
       } catch (err) {
         const error =
           err instanceof Error ? err : new Error('Failed to load entities');
         setError(error);
 
-        analyticsApi.captureEvent('catalog_cards_error');
+        analyticsApi.captureEvent({
+          action: 'catalog_cards_error',
+          subject: 'catalog_cards',
+          context: {} as any,
+        });
       } finally {
         setLoading(false);
       }

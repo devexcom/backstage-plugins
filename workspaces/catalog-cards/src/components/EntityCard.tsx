@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  Button,
-  Link,
-} from '@backstage/core-components';
+import { Link } from '@backstage/core-components';
 import {
   Box,
+  Button,
+  Card,
+  CardContent,
   Chip,
   Typography,
   IconButton,
@@ -21,7 +18,7 @@ import {
   Launch as LaunchIcon,
   MenuBook as DocsIcon,
   GitHub as SourceIcon,
-  Api as ApiIcon,
+  Code as ApiIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
 } from '@material-ui/icons';
@@ -30,9 +27,9 @@ import { useApi, analyticsApiRef } from '@backstage/core-plugin-api';
 import { useRouteRef } from '@backstage/core-plugin-api';
 import { EntityRefLink } from '@backstage/plugin-catalog-react';
 import { EntityCardProps } from '../types';
-import { 
-  extractEntityMetadata, 
-  getEntityTypeDisplayName, 
+import {
+  extractEntityMetadata,
+  getEntityTypeDisplayName,
   getLifecycleColor,
   truncateText,
   getEntityUrl,
@@ -40,24 +37,24 @@ import {
   formatRelativeTime,
 } from '../utils/entityUtils';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   card: {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-    cursor: 'pointer',
+    'height': '100%',
+    'display': 'flex',
+    'flexDirection': 'column',
+    'transition': 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+    'cursor': 'pointer',
     '&:hover': {
       transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
     },
   },
   cardContent: {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing(1),
-    padding: theme.spacing(2),
+    'flexGrow': 1,
+    'display': 'flex',
+    'flexDirection': 'column',
+    'gap': theme.spacing(1),
+    'padding': theme.spacing(2),
     '&:last-child': {
       paddingBottom: theme.spacing(2),
     },
@@ -73,9 +70,9 @@ const useStyles = makeStyles(theme => ({
     minWidth: 0,
   },
   title: {
-    fontWeight: 600,
-    lineHeight: 1.3,
-    cursor: 'pointer',
+    'fontWeight': 600,
+    'lineHeight': 1.3,
+    'cursor': 'pointer',
     '&:hover': {
       textDecoration: 'underline',
     },
@@ -107,10 +104,10 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
   },
   descriptionTruncated: {
-    display: '-webkit-box',
+    'display': '-webkit-box',
     '-webkit-line-clamp': 3,
     '-webkit-box-orient': 'vertical',
-    overflow: 'hidden',
+    'overflow': 'hidden',
   },
   descriptionExpanded: {
     marginBottom: theme.spacing(1),
@@ -170,50 +167,52 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 }) => {
   const classes = useStyles();
   const analyticsApi = useApi(analyticsApiRef);
-  
+
   const [expanded, setExpanded] = useState(expandDescriptionDefault);
   const [isStarred, setIsStarred] = useState(false); // TODO: Integrate with StarredEntitiesApi
-  
+
   const metadata = extractEntityMetadata(entity);
   const isCompact = density === 'compact';
-  
+
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on interactive elements
     if ((e.target as HTMLElement).closest('button, a')) {
       return;
     }
-    
+
     if (onClick) {
       onClick(entity);
     } else {
       // Default navigation
       window.open(getEntityUrl(entity), '_blank', 'noopener,noreferrer');
     }
-    
-    analyticsApi.captureEvent('catalog_card_click', {
-      entityKind: entity.kind,
-      entityType: metadata.type,
+
+    analyticsApi.captureEvent({
+      action: 'catalog_card_click',
+      subject: 'entity',
+      context: {} as any,
     });
   };
 
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     window.open(getEntityUrl(entity), '_blank', 'noopener,noreferrer');
-    
-    analyticsApi.captureEvent('catalog_card_title_click', {
-      entityKind: entity.kind,
-      entityName: metadata.name,
+
+    analyticsApi.captureEvent({
+      action: 'catalog_card_title_click',
+      subject: 'entity',
+      context: {} as any,
     });
   };
 
   const handleStarToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsStarred(!isStarred);
-    
-    analyticsApi.captureEvent('catalog_card_star_toggle', {
-      entityKind: entity.kind,
-      entityName: metadata.name,
-      starred: !isStarred,
+
+    analyticsApi.captureEvent({
+      action: 'catalog_card_star_toggle',
+      subject: 'entity',
+      context: {} as any,
     });
   };
 
@@ -224,7 +223,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const handleQuickAction = (actionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const action = quickActions.find(a => a.id === actionId);
+    const action = quickActions.find((a) => a.id === actionId);
     if (action) {
       action.onClick(entity);
     }
@@ -232,7 +231,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const renderQuickActions = () => {
     const actions = [];
-    
+
     // TechDocs action
     if (metadata.hasTechDocs) {
       const techDocsUrl = getTechDocsUrl(entity);
@@ -248,11 +247,11 @@ export const EntityCard: React.FC<EntityCardProps> = ({
             >
               <DocsIcon />
             </IconButton>
-          </Tooltip>
+          </Tooltip>,
         );
       }
     }
-    
+
     // Source action
     if (metadata.sourceUrl) {
       actions.push(
@@ -266,10 +265,10 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           >
             <SourceIcon />
           </IconButton>
-        </Tooltip>
+        </Tooltip>,
       );
     }
-    
+
     // API action
     if (metadata.apiCount > 0) {
       actions.push(
@@ -277,14 +276,14 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           <IconButton size="small">
             <ApiIcon />
           </IconButton>
-        </Tooltip>
+        </Tooltip>,
       );
     }
-    
+
     // Custom actions
     quickActions
-      .filter(action => !action.isVisible || action.isVisible(entity))
-      .forEach(action => {
+      .filter((action) => !action.isVisible || action.isVisible(entity))
+      .forEach((action) => {
         const IconComponent = action.icon || LaunchIcon;
         actions.push(
           <Tooltip key={action.id} title={action.label}>
@@ -297,7 +296,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                 <IconComponent />
               </IconButton>
             </span>
-          </Tooltip>
+          </Tooltip>,
         );
       });
 
@@ -306,7 +305,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
   const renderBadges = () => {
     const badges = [];
-    
+
     if (metadata.hasTechDocs) {
       badges.push(
         <Chip
@@ -315,10 +314,10 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           size="small"
           variant="outlined"
           className={classes.badge}
-        />
+        />,
       );
     }
-    
+
     if (metadata.apiCount > 0) {
       badges.push(
         <Chip
@@ -327,20 +326,23 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           size="small"
           variant="outlined"
           className={classes.badge}
-        />
+        />,
       );
     }
-    
+
     return badges;
   };
 
-  const shouldShowDescription = metadata.description && metadata.description.length > 0;
-  const truncatedDescription = metadata.description ? 
-    truncateText(metadata.description, 150) : '';
-  const shouldShowExpandButton = metadata.description && metadata.description.length > 150;
+  const shouldShowDescription =
+    metadata.description && metadata.description.length > 0;
+  const truncatedDescription = metadata.description
+    ? truncateText(metadata.description, 150)
+    : '';
+  const shouldShowExpandButton =
+    metadata.description && metadata.description.length > 150;
 
   return (
-    <Card 
+    <Card
       className={`${classes.card} ${isCompact ? classes.compactCard : ''}`}
       onClick={handleCardClick}
     >
@@ -359,10 +361,11 @@ export const EntityCard: React.FC<EntityCardProps> = ({
             <div className={classes.subtitle}>
               {getEntityTypeDisplayName(entity.kind, metadata.type)}
               {metadata.owner && ` • ${metadata.owner}`}
-              {metadata.lastUpdated && ` • ${formatRelativeTime(metadata.lastUpdated)}`}
+              {metadata.lastUpdated &&
+                ` • ${formatRelativeTime(metadata.lastUpdated)}`}
             </div>
           </div>
-          
+
           <Tooltip title={isStarred ? 'Unstar' : 'Star'}>
             <IconButton
               size="small"
@@ -396,7 +399,11 @@ export const EntityCard: React.FC<EntityCardProps> = ({
           <div className={classes.description}>
             <Typography
               variant="body2"
-              className={expanded ? classes.descriptionExpanded : classes.descriptionTruncated}
+              className={
+                expanded
+                  ? classes.descriptionExpanded
+                  : classes.descriptionTruncated
+              }
             >
               {expanded ? metadata.description : truncatedDescription}
             </Typography>
@@ -416,7 +423,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
         {/* Tags */}
         {metadata.tags.length > 0 && (
           <div className={classes.tags}>
-            {metadata.tags.slice(0, isCompact ? 3 : 5).map(tag => (
+            {metadata.tags.slice(0, isCompact ? 3 : 5).map((tag) => (
               <Chip
                 key={tag}
                 label={tag}
@@ -438,10 +445,8 @@ export const EntityCard: React.FC<EntityCardProps> = ({
 
         {/* Quick Actions */}
         <div className={classes.quickActions}>
-          <div className={classes.badges}>
-            {renderBadges()}
-          </div>
-          
+          <div className={classes.badges}>{renderBadges()}</div>
+
           <div className={classes.actionButtons}>
             {renderQuickActions()}
             <Tooltip title="Open Entity">
@@ -449,7 +454,11 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(getEntityUrl(entity), '_blank', 'noopener,noreferrer');
+                  window.open(
+                    getEntityUrl(entity),
+                    '_blank',
+                    'noopener,noreferrer',
+                  );
                 }}
               >
                 <LaunchIcon />

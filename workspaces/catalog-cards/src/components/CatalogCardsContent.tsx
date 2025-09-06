@@ -1,14 +1,14 @@
 import React from 'react';
 import { Box, makeStyles } from '@material-ui/core';
 import { useApi, analyticsApiRef } from '@backstage/core-plugin-api';
-import { CatalogTable, useEntityList } from '@backstage/plugin-catalog-react';
+import { useEntityList } from '@backstage/plugin-catalog-react';
 import { CatalogCardsContentProps } from '../types';
 import { useCatalogViewState } from '../hooks/useCatalogViewState';
 import { useInfiniteEntityList } from '../hooks/useInfiniteEntityList';
 import { CatalogViewToggle } from './CatalogViewToggle';
 import { CatalogCardGrid } from './CatalogCardGrid';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     width: '100%',
     height: '100%',
@@ -43,13 +43,13 @@ export const CatalogCardsContent: React.FC<CatalogCardsContentProps> = ({
 }) => {
   const classes = useStyles();
   const analyticsApi = useApi(analyticsApiRef);
-  
+
   // View state management
   const { view, setView } = useCatalogViewState(initialView);
-  
+
   // Get entity list context for table view
   const { loading: tableLoading, error: tableError } = useEntityList();
-  
+
   // Infinite scroll for cards view
   const {
     entities,
@@ -62,25 +62,26 @@ export const CatalogCardsContent: React.FC<CatalogCardsContentProps> = ({
     pageSize,
     enabled: view === 'cards',
   });
-  
+
   const handleViewChange = (newView: typeof view) => {
     setView(newView);
-    
+
     // Track analytics
-    analyticsApi.captureEvent('catalog_view_toggle', {
-      from: view,
-      to: newView,
-      entitiesCount: entities.length,
+    analyticsApi.captureEvent({
+      action: 'catalog_view_toggle',
+      subject: 'catalog_cards',
+      context: {} as any,
     });
-    
+
     // Refresh cards data when switching to cards view
     if (newView === 'cards' && entities.length === 0) {
       refresh();
     }
   };
-  
-  const TableComponent = CustomTable || CatalogTable;
-  
+
+  const TableComponent =
+    CustomTable || (() => <div>Table view not available</div>);
+
   return (
     <div className={classes.container}>
       {/* View Toggle */}
@@ -93,7 +94,7 @@ export const CatalogCardsContent: React.FC<CatalogCardsContentProps> = ({
           />
         </div>
       )}
-      
+
       {/* Content */}
       <div className={classes.contentContainer}>
         {view === 'table' ? (

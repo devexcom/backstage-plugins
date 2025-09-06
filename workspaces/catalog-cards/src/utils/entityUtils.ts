@@ -6,32 +6,36 @@ import { EntityMetadata } from '../types';
  */
 export function extractEntityMetadata(entity: Entity): EntityMetadata {
   const { metadata, spec = {}, relations = [] } = entity;
-  
+
   // Get title with fallback to name
   const title = metadata.title || metadata.name;
-  
+
   // Extract owner information
   const owner = typeof spec.owner === 'string' ? spec.owner : undefined;
-  
+
   // Check for TechDocs
   const hasTechDocs = !!(
     metadata.annotations?.['backstage.io/techdocs-ref'] ||
     metadata.annotations?.['backstage.io/techdocs-entity']
   );
-  
+
   // Count API relations
   const apiCount = relations.filter(
-    rel => rel.targetRef.startsWith('api:') || rel.type === 'apiProvidedBy' || rel.type === 'apiConsumedBy'
+    (rel) =>
+      rel.targetRef.startsWith('api:') ||
+      rel.type === 'apiProvidedBy' ||
+      rel.type === 'apiConsumedBy',
   ).length;
-  
+
   // Get source URL
-  const sourceUrl = metadata.annotations?.['backstage.io/source-location'] ||
-    metadata.annotations?.['github.com/project-slug'] &&
-    `https://github.com/${metadata.annotations['github.com/project-slug']}`;
-  
+  const sourceUrl =
+    metadata.annotations?.['backstage.io/source-location'] ||
+    (metadata.annotations?.['github.com/project-slug'] &&
+      `https://github.com/${metadata.annotations['github.com/project-slug']}`);
+
   // Get last updated
   const lastUpdated = metadata.annotations?.['backstage.io/last-updated'];
-  
+
   return {
     title,
     name: metadata.name,
@@ -63,14 +67,16 @@ export function getEntityTypeDisplayName(kind: string, type?: string): string {
 /**
  * Get color for entity lifecycle
  */
-export function getLifecycleColor(lifecycle?: string): 'primary' | 'secondary' | 'default' | 'error' {
+export function getLifecycleColor(
+  lifecycle?: string,
+): 'primary' | 'secondary' | 'default' {
   switch (lifecycle?.toLowerCase()) {
     case 'experimental':
       return 'secondary';
     case 'production':
       return 'primary';
     case 'deprecated':
-      return 'error';
+      return 'secondary';
     default:
       return 'default';
   }
@@ -101,11 +107,11 @@ export function getEntityUrl(entity: Entity): string {
 export function getTechDocsUrl(entity: Entity): string | undefined {
   const { kind, metadata } = entity;
   const namespace = metadata.namespace || 'default';
-  
+
   if (!metadata.annotations?.['backstage.io/techdocs-ref']) {
     return undefined;
   }
-  
+
   return `/docs/${namespace}/${kind.toLowerCase()}/${metadata.name}`;
 }
 
@@ -113,7 +119,7 @@ export function getTechDocsUrl(entity: Entity): string | undefined {
  * Check if entity has a specific annotation
  */
 export function hasAnnotation(entity: Entity, annotation: string): boolean {
-  return !!(entity.metadata.annotations?.[annotation]);
+  return !!entity.metadata.annotations?.[annotation];
 }
 
 /**
@@ -121,13 +127,13 @@ export function hasAnnotation(entity: Entity, annotation: string): boolean {
  */
 export function formatRelativeTime(dateString?: string): string | undefined {
   if (!dateString) return undefined;
-  
+
   try {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -143,24 +149,28 @@ export function formatRelativeTime(dateString?: string): string | undefined {
  * Sort entities by various criteria
  */
 export const sortFunctions = {
-  name: (a: Entity, b: Entity) => 
-    (a.metadata.title || a.metadata.name).localeCompare(b.metadata.title || b.metadata.name),
-  
+  name: (a: Entity, b: Entity) =>
+    (a.metadata.title || a.metadata.name).localeCompare(
+      b.metadata.title || b.metadata.name,
+    ),
+
   owner: (a: Entity, b: Entity) => {
     const ownerA = (a.spec as any)?.owner || '';
     const ownerB = (b.spec as any)?.owner || '';
     return ownerA.localeCompare(ownerB);
   },
-  
+
   type: (a: Entity, b: Entity) => {
     const typeA = `${a.kind}-${(a.spec as any)?.type || ''}`;
     const typeB = `${b.kind}-${(b.spec as any)?.type || ''}`;
     return typeA.localeCompare(typeB);
   },
-  
+
   updated: (a: Entity, b: Entity) => {
-    const dateA = a.metadata.annotations?.['backstage.io/last-updated'] || '1970-01-01';
-    const dateB = b.metadata.annotations?.['backstage.io/last-updated'] || '1970-01-01';
+    const dateA =
+      a.metadata.annotations?.['backstage.io/last-updated'] || '1970-01-01';
+    const dateB =
+      b.metadata.annotations?.['backstage.io/last-updated'] || '1970-01-01';
     return new Date(dateB).getTime() - new Date(dateA).getTime(); // Most recent first
   },
 };
@@ -168,28 +178,40 @@ export const sortFunctions = {
 /**
  * Filter entities by search query
  */
-export function filterEntitiesByQuery(entities: Entity[], query: string): Entity[] {
+export function filterEntitiesByQuery(
+  entities: Entity[],
+  query: string,
+): Entity[] {
   if (!query.trim()) return entities;
-  
+
   const searchTerm = query.toLowerCase();
-  
-  return entities.filter(entity => {
+
+  return entities.filter((entity) => {
     const { metadata, spec = {} } = entity;
-    
+
     // Search in title, name, description
     if (metadata.title?.toLowerCase().includes(searchTerm)) return true;
     if (metadata.name.toLowerCase().includes(searchTerm)) return true;
     if (metadata.description?.toLowerCase().includes(searchTerm)) return true;
-    
+
     // Search in tags
-    if (metadata.tags?.some(tag => tag.toLowerCase().includes(searchTerm))) return true;
-    
+    if (metadata.tags?.some((tag) => tag.toLowerCase().includes(searchTerm)))
+      return true;
+
     // Search in owner
-    if (typeof spec.owner === 'string' && spec.owner.toLowerCase().includes(searchTerm)) return true;
-    
+    if (
+      typeof spec.owner === 'string' &&
+      spec.owner.toLowerCase().includes(searchTerm)
+    )
+      return true;
+
     // Search in type
-    if (typeof spec.type === 'string' && spec.type.toLowerCase().includes(searchTerm)) return true;
-    
+    if (
+      typeof spec.type === 'string' &&
+      spec.type.toLowerCase().includes(searchTerm)
+    )
+      return true;
+
     return false;
   });
 }
