@@ -64,4 +64,4 @@ jobs:
         if: steps.changesets.outputs.published == 'true'
         run: |
           echo "🎉 Published packages:"
-          echo "${{ steps.changesets.outputs.publishedPackages }}" | jq -r '.[] | "- \(.name)@\(.version)"'
+          echo "${{ steps.changesets.outputs.publishedPackages }}"
