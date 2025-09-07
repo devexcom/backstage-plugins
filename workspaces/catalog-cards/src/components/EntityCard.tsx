@@ -1,40 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from '@backstage/core-components';
 import {
-  Box,
-  Button,
   Card,
   CardContent,
   Chip,
   Typography,
   IconButton,
-  Collapse,
   makeStyles,
   Tooltip,
+  Avatar,
 } from '@material-ui/core';
 import {
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
   Launch as LaunchIcon,
   MenuBook as DocsIcon,
   GitHub as SourceIcon,
   Code as ApiIcon,
-  Star as StarIcon,
-  StarBorder as StarBorderIcon,
 } from '@material-ui/icons';
 import { Entity } from '@backstage/catalog-model';
 import { useApi, analyticsApiRef } from '@backstage/core-plugin-api';
-import { useRouteRef } from '@backstage/core-plugin-api';
-import { EntityRefLink } from '@backstage/plugin-catalog-react';
 import { EntityCardProps } from '../types';
 import {
   extractEntityMetadata,
   getEntityTypeDisplayName,
-  getLifecycleColor,
-  truncateText,
   getEntityUrl,
   getTechDocsUrl,
-  formatRelativeTime,
 } from '../utils/entityUtils';
 
 const useStyles = makeStyles((theme) => ({
@@ -42,118 +31,137 @@ const useStyles = makeStyles((theme) => ({
     'height': '100%',
     'display': 'flex',
     'flexDirection': 'column',
-    'transition': 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
     'cursor': 'pointer',
+    'transition': theme.transitions.create(['box-shadow', 'transform'], {
+      duration: theme.transitions.duration.short,
+    }),
     '&:hover': {
-      transform: 'translateY(-2px)',
       boxShadow: theme.shadows[4],
+      transform: 'translateY(-1px)',
     },
   },
   cardContent: {
-    'flexGrow': 1,
+    'flex': 1,
     'display': 'flex',
     'flexDirection': 'column',
-    'gap': theme.spacing(1),
-    'padding': theme.spacing(2),
+    'padding': theme.spacing(3),
     '&:last-child': {
-      paddingBottom: theme.spacing(2),
+      paddingBottom: theme.spacing(3),
     },
   },
-  headerContent: {
+  header: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    minHeight: 48,
+    marginBottom: theme.spacing(2),
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    flex: 1,
+    minWidth: 0,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    marginRight: theme.spacing(2),
+    backgroundColor: theme.palette.primary.main,
+    fontSize: '1.1rem',
+    fontWeight: 500,
   },
   titleSection: {
     flex: 1,
     minWidth: 0,
   },
   title: {
-    'fontWeight': 600,
-    'lineHeight': 1.3,
-    'cursor': 'pointer',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
+    fontWeight: 500,
+    textDecoration: 'none',
+    fontSize: '1rem',
+    lineHeight: 1.4,
   },
-  subtitle: {
-    color: theme.palette.text.secondary,
+  description: {
+    color: theme.palette.text.primary,
+    marginBottom: theme.spacing(2.5),
     fontSize: '0.875rem',
-    marginTop: theme.spacing(0.5),
+    lineHeight: 1.5,
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    fontWeight: 400,
   },
-  starButton: {
-    marginLeft: theme.spacing(1),
+  entityInfo: {
+    color: theme.palette.text.secondary,
+    fontSize: '0.75rem',
+    lineHeight: 1.4,
+    fontWeight: 400,
+    marginTop: 'auto',
+    paddingTop: theme.spacing(1),
+    borderTop: `1px solid ${theme.palette.divider}`,
+    marginBottom: theme.spacing(1),
+  },
+  statusSection: {
+    marginBottom: theme.spacing(2),
+  },
+  lifecycle: {
+    'fontSize': '0.75rem',
+    'height': 22,
+    'fontWeight': 500,
+    'backgroundColor': theme.palette.primary.main,
+    'color': theme.palette.primary.contrastText,
+    '&.experimental': {
+      backgroundColor: '#1976d2', // Professional blue
+      color: 'white',
+    },
+    '&.production': {
+      backgroundColor: '#2e7d32', // Professional green
+      color: 'white',
+    },
   },
   metadata: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: theme.spacing(1),
-    marginBottom: theme.spacing(1),
+    gap: theme.spacing(0.75),
+    marginBottom: theme.spacing(2.5),
   },
-  metadataItem: {
+  tag: {
+    fontSize: '0.75rem',
+    height: 26,
+    backgroundColor: theme.palette.grey[100],
+    color: theme.palette.text.secondary,
+    border: 'none',
+    fontWeight: 400,
+  },
+  infoSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(2),
+    color: theme.palette.text.secondary,
+    fontSize: '0.813rem',
+  },
+  infoBadge: {
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(0.5),
-    fontSize: '0.875rem',
-    color: theme.palette.text.secondary,
   },
-  description: {
-    color: theme.palette.text.secondary,
-    lineHeight: 1.5,
-    flexGrow: 1,
-  },
-  descriptionTruncated: {
-    'display': '-webkit-box',
-    '-webkit-line-clamp': 3,
-    '-webkit-box-orient': 'vertical',
-    'overflow': 'hidden',
-  },
-  descriptionExpanded: {
-    marginBottom: theme.spacing(1),
-  },
-  expandButton: {
-    alignSelf: 'flex-start',
-    padding: theme.spacing(0.5),
-    minWidth: 'auto',
-  },
-  tags: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: theme.spacing(0.5),
-    marginTop: theme.spacing(1),
-  },
-  tag: {
-    height: 24,
-    fontSize: '0.75rem',
-  },
-  quickActions: {
+  actions: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: theme.spacing(2),
-    paddingTop: theme.spacing(1),
-    borderTop: `1px solid ${theme.palette.divider}`,
   },
   actionButtons: {
     display: 'flex',
     gap: theme.spacing(0.5),
   },
-  badges: {
-    display: 'flex',
-    gap: theme.spacing(0.5),
-  },
-  badge: {
-    height: 20,
-    fontSize: '0.625rem',
-    minWidth: 20,
-  },
   compactCard: {
     '& $cardContent': {
       padding: theme.spacing(1.5),
     },
-    '& $description': {
-      fontSize: '0.875rem',
+    '& $avatar': {
+      width: 32,
+      height: 32,
+      marginRight: theme.spacing(1.5),
     },
   },
 }));
@@ -161,15 +169,10 @@ const useStyles = makeStyles((theme) => ({
 export const EntityCard: React.FC<EntityCardProps> = ({
   entity,
   density = 'comfortable',
-  expandDescriptionDefault = false,
   onClick,
-  quickActions = [],
 }) => {
   const classes = useStyles();
   const analyticsApi = useApi(analyticsApiRef);
-
-  const [expanded, setExpanded] = useState(expandDescriptionDefault);
-  const [isStarred, setIsStarred] = useState(false); // TODO: Integrate with StarredEntitiesApi
 
   const metadata = extractEntityMetadata(entity);
   const isCompact = density === 'compact';
@@ -183,8 +186,13 @@ export const EntityCard: React.FC<EntityCardProps> = ({
     if (onClick) {
       onClick(entity);
     } else {
-      // Default navigation
-      window.open(getEntityUrl(entity), '_blank', 'noopener,noreferrer');
+      // Let the Link component handle navigation
+      const link = e.currentTarget.querySelector(
+        'a[href]',
+      ) as HTMLAnchorElement;
+      if (link) {
+        link.click();
+      }
     }
 
     analyticsApi.captureEvent({
@@ -194,271 +202,148 @@ export const EntityCard: React.FC<EntityCardProps> = ({
     });
   };
 
-  const handleTitleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.open(getEntityUrl(entity), '_blank', 'noopener,noreferrer');
-
-    analyticsApi.captureEvent({
-      action: 'catalog_card_title_click',
-      subject: 'entity',
-      context: {} as any,
-    });
+  // Create entity initials for avatar
+  const getEntityInitials = (entity: Entity) => {
+    const name = entity.metadata.name || '';
+    return name
+      .split('-')
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
-
-  const handleStarToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsStarred(!isStarred);
-
-    analyticsApi.captureEvent({
-      action: 'catalog_card_star_toggle',
-      subject: 'entity',
-      context: {} as any,
-    });
-  };
-
-  const handleExpandToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpanded(!expanded);
-  };
-
-  const handleQuickAction = (actionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const action = quickActions.find((a) => a.id === actionId);
-    if (action) {
-      action.onClick(entity);
-    }
-  };
-
-  const renderQuickActions = () => {
-    const actions = [];
-
-    // TechDocs action
-    if (metadata.hasTechDocs) {
-      const techDocsUrl = getTechDocsUrl(entity);
-      if (techDocsUrl) {
-        actions.push(
-          <Tooltip key="techdocs" title="View Documentation">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(techDocsUrl, '_blank', 'noopener,noreferrer');
-              }}
-            >
-              <DocsIcon />
-            </IconButton>
-          </Tooltip>,
-        );
-      }
-    }
-
-    // Source action
-    if (metadata.sourceUrl) {
-      actions.push(
-        <Tooltip key="source" title="View Source">
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(metadata.sourceUrl, '_blank', 'noopener,noreferrer');
-            }}
-          >
-            <SourceIcon />
-          </IconButton>
-        </Tooltip>,
-      );
-    }
-
-    // API action
-    if (metadata.apiCount > 0) {
-      actions.push(
-        <Tooltip key="apis" title={`${metadata.apiCount} APIs`}>
-          <IconButton size="small">
-            <ApiIcon />
-          </IconButton>
-        </Tooltip>,
-      );
-    }
-
-    // Custom actions
-    quickActions
-      .filter((action) => !action.isVisible || action.isVisible(entity))
-      .forEach((action) => {
-        const IconComponent = action.icon || LaunchIcon;
-        actions.push(
-          <Tooltip key={action.id} title={action.label}>
-            <span>
-              <IconButton
-                size="small"
-                disabled={action.isDisabled?.(entity)}
-                onClick={(e) => handleQuickAction(action.id, e)}
-              >
-                <IconComponent />
-              </IconButton>
-            </span>
-          </Tooltip>,
-        );
-      });
-
-    return actions;
-  };
-
-  const renderBadges = () => {
-    const badges = [];
-
-    if (metadata.hasTechDocs) {
-      badges.push(
-        <Chip
-          key="docs"
-          label="Docs"
-          size="small"
-          variant="outlined"
-          className={classes.badge}
-        />,
-      );
-    }
-
-    if (metadata.apiCount > 0) {
-      badges.push(
-        <Chip
-          key="apis"
-          label={`${metadata.apiCount} API${metadata.apiCount > 1 ? 's' : ''}`}
-          size="small"
-          variant="outlined"
-          className={classes.badge}
-        />,
-      );
-    }
-
-    return badges;
-  };
-
-  const shouldShowDescription =
-    metadata.description && metadata.description.length > 0;
-  const truncatedDescription = metadata.description
-    ? truncateText(metadata.description, 150)
-    : '';
-  const shouldShowExpandButton =
-    metadata.description && metadata.description.length > 150;
 
   return (
     <Card
       className={`${classes.card} ${isCompact ? classes.compactCard : ''}`}
       onClick={handleCardClick}
+      elevation={1}
     >
       <CardContent className={classes.cardContent}>
-        {/* Header */}
-        <div className={classes.headerContent}>
-          <div className={classes.titleSection}>
-            <Typography
-              variant={isCompact ? 'subtitle1' : 'h6'}
-              className={classes.title}
-              onClick={handleTitleClick}
-              noWrap
-            >
-              {metadata.title}
-            </Typography>
-            <div className={classes.subtitle}>
-              {getEntityTypeDisplayName(entity.kind, metadata.type)}
-              {metadata.owner && ` • ${metadata.owner}`}
-              {metadata.lastUpdated &&
-                ` • ${formatRelativeTime(metadata.lastUpdated)}`}
+        {/* Header with Avatar and Lifecycle */}
+        <div className={classes.header}>
+          <div className={classes.headerLeft}>
+            <Avatar className={classes.avatar}>
+              {getEntityInitials(entity)}
+            </Avatar>
+            <div className={classes.titleSection}>
+              <Typography
+                variant="h6"
+                className={classes.title}
+                component={Link}
+                to={getEntityUrl(entity)}
+                color="inherit"
+              >
+                {metadata.title}
+              </Typography>
             </div>
           </div>
 
-          <Tooltip title={isStarred ? 'Unstar' : 'Star'}>
-            <IconButton
-              size="small"
-              className={classes.starButton}
-              onClick={handleStarToggle}
-            >
-              {isStarred ? <StarIcon /> : <StarBorderIcon />}
-            </IconButton>
-          </Tooltip>
-        </div>
-
-        {/* Metadata */}
-        <div className={classes.metadata}>
+          {/* Lifecycle Status - Top Right */}
           {metadata.lifecycle && (
             <Chip
               size="small"
               label={metadata.lifecycle}
-              color={getLifecycleColor(metadata.lifecycle)}
-              className={classes.tag}
+              className={`${classes.lifecycle} ${metadata.lifecycle}`}
             />
-          )}
-          {metadata.system && (
-            <div className={classes.metadataItem}>
-              <span>System: {metadata.system}</span>
-            </div>
           )}
         </div>
 
         {/* Description */}
-        {shouldShowDescription && (
-          <div className={classes.description}>
-            <Typography
-              variant="body2"
-              className={
-                expanded
-                  ? classes.descriptionExpanded
-                  : classes.descriptionTruncated
-              }
-            >
-              {expanded ? metadata.description : truncatedDescription}
-            </Typography>
-            {shouldShowExpandButton && (
-              <Button
-                size="small"
-                className={classes.expandButton}
-                onClick={handleExpandToggle}
-                endIcon={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              >
-                {expanded ? 'Show less' : 'Show more'}
-              </Button>
-            )}
-          </div>
+        {metadata.description && (
+          <Typography className={classes.description}>
+            {metadata.description}
+          </Typography>
         )}
 
         {/* Tags */}
         {metadata.tags.length > 0 && (
-          <div className={classes.tags}>
-            {metadata.tags.slice(0, isCompact ? 3 : 5).map((tag) => (
+          <div className={classes.metadata}>
+            {metadata.tags.slice(0, isCompact ? 2 : 4).map((tag) => (
               <Chip
                 key={tag}
                 label={tag}
                 size="small"
-                variant="outlined"
                 className={classes.tag}
               />
             ))}
-            {metadata.tags.length > (isCompact ? 3 : 5) && (
+            {metadata.tags.length > (isCompact ? 2 : 4) && (
               <Chip
-                label={`+${metadata.tags.length - (isCompact ? 3 : 5)}`}
+                label={`+${metadata.tags.length - (isCompact ? 2 : 4)}`}
                 size="small"
-                variant="outlined"
                 className={classes.tag}
               />
             )}
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className={classes.quickActions}>
-          <div className={classes.badges}>{renderBadges()}</div>
+        {/* Entity Info */}
+        <div className={classes.entityInfo}>
+          {getEntityTypeDisplayName(entity.kind, metadata.type)}
+          {metadata.owner && ` • ${metadata.owner}`}
+          {metadata.system && ` • ${metadata.system}`}
+        </div>
 
+        {/* Bottom Row - Info & Actions */}
+        <div className={classes.actions}>
+          {/* Left: Info badges */}
+          <div className={classes.infoSection}>
+            {metadata.hasTechDocs && (
+              <div className={classes.infoBadge}>
+                <DocsIcon style={{ fontSize: '1rem' }} />
+                <span>Docs</span>
+              </div>
+            )}
+            {metadata.apiCount > 0 && (
+              <div className={classes.infoBadge}>
+                <ApiIcon style={{ fontSize: '1rem' }} />
+                <span>
+                  {metadata.apiCount} API{metadata.apiCount > 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Action buttons */}
           <div className={classes.actionButtons}>
-            {renderQuickActions()}
+            {metadata.hasTechDocs && (
+              <Tooltip title="View Documentation">
+                <IconButton
+                  size="small"
+                  component={Link}
+                  to={getTechDocsUrl(entity) || ''}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <DocsIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+            {metadata.sourceUrl && (
+              <Tooltip title="View Source">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(
+                      metadata.sourceUrl,
+                      '_blank',
+                      'noopener,noreferrer',
+                    );
+                  }}
+                >
+                  <SourceIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             <Tooltip title="Open Entity">
               <IconButton
                 size="small"
+                component={Link}
+                to={getEntityUrl(entity)}
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(
-                    getEntityUrl(entity),
-                    '_blank',
-                    'noopener,noreferrer',
-                  );
                 }}
               >
                 <LaunchIcon />

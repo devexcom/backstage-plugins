@@ -1,11 +1,14 @@
-import React from 'react';
-import { Box, makeStyles } from '@material-ui/core';
-import { useApi, analyticsApiRef } from '@backstage/core-plugin-api';
-import { useEntityList } from '@backstage/plugin-catalog-react';
+import React, { useState, useMemo } from 'react';
+import { makeStyles, TextField, InputAdornment } from '@material-ui/core';
+import { Search as SearchIcon } from '@material-ui/icons';
+import {
+  useApi,
+  analyticsApiRef,
+  configApiRef,
+} from '@backstage/core-plugin-api';
+import { HeaderTabs } from '@backstage/core-components';
 import { CatalogCardsContentProps } from '../types';
-import { useCatalogViewState } from '../hooks/useCatalogViewState';
 import { useInfiniteEntityList } from '../hooks/useInfiniteEntityList';
-import { CatalogViewToggle } from './CatalogViewToggle';
 import { CatalogCardGrid } from './CatalogCardGrid';
 
 const useStyles = makeStyles((theme) => ({
@@ -13,29 +16,32 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: '100%',
   },
-  viewToggleContainer: {
+  headerContainer: {
     display: 'flex',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    padding: theme.spacing(1, 2),
+    justifyContent: 'space-between',
     borderBottom: `1px solid ${theme.palette.divider}`,
     backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(1, 2),
+  },
+  tabsContainer: {
+    flex: 1,
+  },
+  searchContainer: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchField: {
+    maxWidth: 300,
+    width: '100%',
   },
   contentContainer: {
     flex: 1,
     overflow: 'auto',
   },
-  tableContainer: {
-    '& .MuiTable-root': {
-      minWidth: 0, // Allow table to shrink
-    },
-  },
 }));
 
 export const CatalogCardsContent: React.FC<CatalogCardsContentProps> = ({
-  initialView = 'table',
-  showViewToggle = true,
-  tableComponent: CustomTable,
   pageSize = 50,
   enableVirtualization = false,
   density = 'comfortable',
@@ -43,76 +49,222 @@ export const CatalogCardsContent: React.FC<CatalogCardsContentProps> = ({
 }) => {
   const classes = useStyles();
   const analyticsApi = useApi(analyticsApiRef);
+  const configApi = useApi(configApiRef);
 
-  // View state management
-  const { view, setView } = useCatalogViewState(initialView);
+  // Kind filtering state
+  const [selectedKindIndex, setSelectedKindIndex] = useState(0);
 
-  // Get entity list context for table view
-  const { loading: tableLoading, error: tableError } = useEntityList();
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Get excluded kinds from app config
+  const excludedKinds = useMemo(() => {
+    try {
+      // Try different ways to access the configuration
+      let excludeKinds: string[] = [];
+
+      // Method 1: Direct string array access
+      try {
+        const config1 = configApi.getOptionalStringArray(
+          'catalog.cards.excludeKinds',
+        );
+        if (config1) excludeKinds = config1;
+      } catch (e) {
+        // Silent fallback to method 2
+      }
+
+      // Method 2: Access via nested config object
+      if (excludeKinds.length === 0) {
+        try {
+          const catalogConfig = configApi.getOptionalConfig('catalog');
+          if (catalogConfig) {
+            const cardsConfig = catalogConfig.getOptionalConfig('cards');
+            if (cardsConfig) {
+              const excludeKindsFromNested =
+                cardsConfig.getOptionalStringArray('excludeKinds');
+              if (excludeKindsFromNested) excludeKinds = excludeKindsFromNested;
+            }
+          }
+        } catch (e) {
+          // Silent fallback to hardcoded values
+        }
+      }
+
+      // If configuration reading fails, use hardcoded values
+      // This matches the app-config.yaml configuration
+      const hardcodedExcludeKinds = ['Location', 'Template', 'User'];
+      return excludeKinds.length > 0 ? excludeKinds : hardcodedExcludeKinds;
+    } catch (error) {
+      // Return default excluded kinds on any error
+      return ['Location', 'Template', 'User'];
+    }
+  }, [configApi]);
 
   // Infinite scroll for cards view
-  const {
-    entities,
-    loading: cardsLoading,
-    hasNextPage,
-    error: cardsError,
-    loadMore,
-    refresh,
-  } = useInfiniteEntityList({
-    pageSize,
-    enabled: view === 'cards',
-  });
+  const { entities, loading, hasNextPage, error, loadMore } =
+    useInfiniteEntityList({
+      pageSize,
+      enabled: true,
+    });
 
-  const handleViewChange = (newView: typeof view) => {
-    setView(newView);
+  // Filter out excluded kinds from entities
+  const allowedEntities = useMemo(() => {
+    return entities.filter((entity) => !excludedKinds.includes(entity.kind));
+  }, [entities, excludedKinds]);
+
+  // Calculate available entity kinds and create tabs
+  const entityKinds = useMemo(() => {
+    if (allowedEntities.length === 0) return [];
+    const kinds = Array.from(
+      new Set(allowedEntities.map((entity) => entity.kind)),
+    ).sort();
+    return kinds;
+  }, [allowedEntities]);
+
+  const tabs = useMemo(() => {
+    const allTab = { id: 'all', label: 'All' };
+    const kindTabs = entityKinds.map((kind) => ({
+      id: kind.toLowerCase(),
+      label: kind,
+    }));
+    return [allTab, ...kindTabs];
+  }, [entityKinds]);
+
+  // Search function
+  const searchEntities = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return allowedEntities;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return allowedEntities.filter((entity) => {
+      // Search in entity name
+      if (entity.metadata.name?.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search in title/display name
+      if (entity.metadata.title?.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search in description
+      if (entity.metadata.description?.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search in tags
+      if (
+        entity.metadata.tags?.some((tag) => tag.toLowerCase().includes(query))
+      ) {
+        return true;
+      }
+
+      // Search in spec.type
+      if (
+        typeof entity.spec?.type === 'string' &&
+        entity.spec.type.toLowerCase().includes(query)
+      ) {
+        return true;
+      }
+
+      // Search in owner
+      if (
+        typeof entity.spec?.owner === 'string' &&
+        entity.spec.owner.toLowerCase().includes(query)
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+  }, [allowedEntities, searchQuery]);
+
+  // Filter entities based on selected kind
+  const filteredEntities = useMemo(() => {
+    const entitiesToFilter = searchEntities;
+
+    if (selectedKindIndex === 0) {
+      return entitiesToFilter; // "All" tab
+    }
+    const selectedKind = entityKinds[selectedKindIndex - 1];
+    return entitiesToFilter.filter((entity) => entity.kind === selectedKind);
+  }, [searchEntities, selectedKindIndex, entityKinds]);
+
+  const handleKindChange = (index: number) => {
+    setSelectedKindIndex(index);
 
     // Track analytics
     analyticsApi.captureEvent({
-      action: 'catalog_view_toggle',
+      action: 'catalog_kind_filter',
       subject: 'catalog_cards',
-      context: {} as any,
+      context: { kind: index === 0 ? 'all' : entityKinds[index - 1] } as any,
     });
+  };
 
-    // Refresh cards data when switching to cards view
-    if (newView === 'cards' && entities.length === 0) {
-      refresh();
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+
+    // Track analytics
+    if (query.trim()) {
+      analyticsApi.captureEvent({
+        action: 'catalog_search',
+        subject: 'catalog_cards',
+        context: { query: query.trim() } as any,
+      });
     }
   };
 
-  const TableComponent =
-    CustomTable || (() => <div>Table view not available</div>);
-
   return (
     <div className={classes.container}>
-      {/* View Toggle */}
-      {showViewToggle && (
-        <div className={classes.viewToggleContainer}>
-          <CatalogViewToggle
-            view={view}
-            onViewChange={handleViewChange}
-            disabled={tableLoading || cardsLoading}
-          />
+      {/* Header with Entity Kind Tabs and Search */}
+      {(tabs.length > 1 || searchQuery.trim()) && (
+        <div className={classes.headerContainer}>
+          {/* Entity Kind Tabs */}
+          {tabs.length > 1 && (
+            <div className={classes.tabsContainer}>
+              <HeaderTabs
+                tabs={tabs}
+                selectedIndex={selectedKindIndex}
+                onChange={handleKindChange}
+              />
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div className={classes.searchContainer}>
+            <TextField
+              className={classes.searchField}
+              placeholder="Search entities..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              variant="outlined"
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </div>
         </div>
       )}
 
-      {/* Content */}
+      {/* Cards Content */}
       <div className={classes.contentContainer}>
-        {view === 'table' ? (
-          <div className={classes.tableContainer}>
-            <TableComponent />
-          </div>
-        ) : (
-          <CatalogCardGrid
-            entities={entities}
-            loading={cardsLoading}
-            hasNextPage={hasNextPage}
-            onLoadMore={loadMore}
-            error={cardsError}
-            density={density}
-            expandDescriptionsDefault={expandDescriptionsDefault}
-            enableVirtualization={enableVirtualization}
-          />
-        )}
+        <CatalogCardGrid
+          entities={filteredEntities}
+          loading={loading}
+          hasNextPage={hasNextPage}
+          onLoadMore={loadMore}
+          error={error}
+          density={density}
+          expandDescriptionsDefault={expandDescriptionsDefault}
+          enableVirtualization={enableVirtualization}
+        />
       </div>
     </div>
   );

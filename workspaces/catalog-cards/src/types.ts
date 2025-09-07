@@ -13,12 +13,6 @@ export interface CatalogViewState {
 }
 
 export interface CatalogCardsContentProps {
-  /** Initial view preference */
-  initialView?: CatalogView;
-  /** Whether to show the view toggle */
-  showViewToggle?: boolean;
-  /** Custom table component to use when in table view */
-  tableComponent?: React.ComponentType<any>;
   /** Items per page for infinite scroll */
   pageSize?: number;
   /** Whether to enable virtualization for large datasets */

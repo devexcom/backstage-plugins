@@ -5,7 +5,6 @@ import {
   EntityListProvider,
   CatalogApi,
   catalogApiRef,
-  GetEntitiesRequest,
 } from '@backstage/plugin-catalog-react';
 import { Entity } from '@backstage/catalog-model';
 
@@ -82,8 +81,6 @@ createDevApp()
         <div style={{ height: '100vh', padding: '1rem' }}>
           <h1>Catalog Cards Demo</h1>
           <CatalogCardsContent
-            initialView="cards"
-            showViewToggle={true}
             pageSize={20}
             density="comfortable"
             enableVirtualization={false}
@@ -100,8 +97,6 @@ createDevApp()
         <div style={{ height: '100vh', padding: '1rem' }}>
           <h1>Catalog Cards - Virtualized</h1>
           <CatalogCardsContent
-            initialView="cards"
-            showViewToggle={true}
             pageSize={50}
             density="compact"
             enableVirtualization={true}

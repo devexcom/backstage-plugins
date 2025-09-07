@@ -32,7 +32,6 @@ const useStyles = makeStyles((theme) => ({
 export const CatalogViewToggle: React.FC<CatalogViewToggleProps> = ({
   view,
   onViewChange,
-  disabled = false,
 }) => {
   const classes = useStyles();
 

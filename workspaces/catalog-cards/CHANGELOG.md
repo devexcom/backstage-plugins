@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.2
+
+### Patch Changes
+
+- Enhanced UX design and added search functionality
+  - Add real-time search across entity names, descriptions, tags, and owners
+  - Move lifecycle badge to top right corner for better space utilization
+  - Implement professional blue color scheme for lifecycle badges
+  - Align card design with Backstage demo page aesthetics
+  - Fix entity kind exclusion configuration handling
+  - Improve avatar-based entity representation
+  - Clean up console logging output
+  - Fix React navigation to stay within same page
+  - Optimize layout spacing and typography
+
 ## 0.1.1
 
 ### Patch Changes

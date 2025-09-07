@@ -107,7 +107,6 @@ interface GridVirtualCardProps {
 }
 
 const VirtualCard: React.FC<GridVirtualCardProps> = ({
-  columnIndex,
   rowIndex,
   style,
   data,
