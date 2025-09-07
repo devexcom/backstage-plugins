@@ -13,6 +13,8 @@ export {
   CatalogViewToggle,
   CatalogCardGrid,
   EntityCard,
+  CatalogCardsPage,
+  catalogCardsRouteRef,
 } from './plugin';
 
 export type {

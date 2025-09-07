@@ -2,7 +2,7 @@
 
 A Backstage plugin that provides a rich card view for the software catalog with infinite scroll and entity kind filtering.
 
-![alt text](assets/catalog-cards.png)
+![alt text](assets/cards-v2.png)
 
 ## Features
 
@@ -39,7 +39,36 @@ catalog:
 
 This will hide the specified entity kinds from both the filtering tabs and the entity list.
 
-## Usage
+## Quick Start
+
+### Add to Backstage Navigation
+
+1. **Add to App Routes** - In `packages/app/src/App.tsx`:
+
+```tsx
+import { Route } from 'react-router-dom';
+import { CatalogCardsPage } from '@devexcom/plugin-catalog-cards';
+
+const routes = (
+  <FlatRoutes>
+    {/* ... other routes */}
+    <Route path="/catalog-cards" element={<CatalogCardsPage />} />
+  </FlatRoutes>
+);
+```
+
+2. **Add Navigation Item** - In `packages/app/src/components/Root/Root.tsx`:
+
+```tsx
+import { CatalogIcon } from '@backstage/core-components';
+
+<SidebarGroup label="Menu">
+  <SidebarItem icon={CatalogIcon} to="catalog-cards" text="Catalog Cards" />
+  {/* ... other navigation items */}
+</SidebarGroup>;
+```
+
+### Custom Implementation
 
 Replace your existing catalog page or add as a new route:
 
