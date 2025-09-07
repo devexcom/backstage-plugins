@@ -73,7 +73,7 @@ describe('useCatalogViewState', () => {
     expect(mockBucket.snapshot).toHaveBeenCalledWith('view');
   });
 
-  it('should update view and URL when setView is called', () => {
+  it('should update view and storage when setView is called', () => {
     const { result } = renderHook(() => useCatalogViewState(), { wrapper });
 
     act(() => {
@@ -102,7 +102,7 @@ describe('useCatalogViewState', () => {
     expect(result.current.view).toBe('table');
   });
 
-  it('should remove view parameter from URL when setting table view', () => {
+  it('should set view to table when requested', () => {
     const TestWrapper = ({ children }: { children: React.ReactNode }) =>
       wrapper({ children, initialRoute: '/?view=cards&other=param' });
 
@@ -117,10 +117,10 @@ describe('useCatalogViewState', () => {
     });
 
     expect(result.current.view).toBe('table');
-    // URL should still have other params but not view
+    expect(mockBucket.set).toHaveBeenCalledWith('view', 'table');
   });
 
-  it('should preserve other URL parameters when changing view', () => {
+  it('should change view to cards when requested', () => {
     const TestWrapper = ({ children }: { children: React.ReactNode }) =>
       wrapper({ children, initialRoute: '/?filter=service&view=table' });
 
@@ -128,12 +128,14 @@ describe('useCatalogViewState', () => {
       wrapper: TestWrapper,
     });
 
+    expect(result.current.view).toBe('table');
+
     act(() => {
       result.current.setView('cards');
     });
 
     expect(result.current.view).toBe('cards');
-    // Other parameters should be preserved
+    expect(mockBucket.set).toHaveBeenCalledWith('view', 'cards');
   });
 
   it('should ignore invalid view values from URL', () => {
