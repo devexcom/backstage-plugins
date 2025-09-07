@@ -48,6 +48,39 @@ jobs:
       - name: Build packages
         run: yarn build:all
 
+      - name: Check for unpublished versions
+        id: unpublished-check
+        run: |
+          # Check if any workspace packages have versions not published to npm
+          HAS_UNPUBLISHED=false
+
+          for workspace in workspaces/*/package.json; do
+            if [ -f "$workspace" ]; then
+              PACKAGE_NAME=$(jq -r '.name' "$workspace")
+              LOCAL_VERSION=$(jq -r '.version' "$workspace")
+              
+              # Skip if package name or version is null
+              if [ "$PACKAGE_NAME" != "null" ] && [ "$LOCAL_VERSION" != "null" ]; then
+                # Check if this version exists on npm
+                if ! npm view "$PACKAGE_NAME@$LOCAL_VERSION" version >/dev/null 2>&1; then
+                  echo "📦 Found unpublished version: $PACKAGE_NAME@$LOCAL_VERSION"
+                  HAS_UNPUBLISHED=true
+                fi
+              fi
+            fi
+          done
+
+          echo "has-unpublished=$HAS_UNPUBLISHED" >> $GITHUB_OUTPUT
+
+      - name: Publish unpublished versions
+        id: publish-existing
+        if: steps.unpublished-check.outputs.has-unpublished == 'true'
+        run: |
+          echo "🚀 Publishing existing unpublished versions..."
+          yarn changeset publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Check for changesets
         id: changesets-check
         run: |
@@ -71,7 +104,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Summary
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' || steps.publish-existing.outcome == 'success'
         run: |
           echo "🎉 Published packages:"
-          echo "${{ steps.changesets.outputs.publishedPackages }}"
+          if [ "${{ steps.changesets.outputs.published }}" == "true" ]; then
+            echo "📦 From changesets: ${{ steps.changesets.outputs.publishedPackages }}"
+          fi
+          if [ "${{ steps.publish-existing.outcome }}" == "success" ]; then
+            echo "📦 From unpublished versions: Published existing versions"
+          fi
