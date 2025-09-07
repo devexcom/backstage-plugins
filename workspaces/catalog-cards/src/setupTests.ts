@@ -79,6 +79,8 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Suppress console warnings in tests unless explicitly needed
 const originalWarn = console.warn;
+const originalError = console.error;
+
 console.warn = (...args: any[]) => {
   if (
     args[0]?.includes?.('Material-UI') ||
@@ -89,4 +91,16 @@ console.warn = (...args: any[]) => {
     return;
   }
   originalWarn(...args);
+};
+
+console.error = (...args: any[]) => {
+  if (
+    args[0]?.includes?.('ReactDOMTestUtils.act') ||
+    args[0]?.includes?.('ReactDOM.render is no longer supported') ||
+    args[0]?.includes?.('unmountComponentAtNode is deprecated') ||
+    args[0]?.includes?.('createRoot instead')
+  ) {
+    return;
+  }
+  originalError(...args);
 };

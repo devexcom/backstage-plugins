@@ -1,5 +1,4 @@
 import React from 'react';
-import { act } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { MemoryRouter } from 'react-router-dom';
 import { TestApiProvider } from '@backstage/test-utils';
@@ -76,9 +75,7 @@ describe('useCatalogViewState', () => {
   it('should update view and storage when setView is called', () => {
     const { result } = renderHook(() => useCatalogViewState(), { wrapper });
 
-    act(() => {
-      result.current.setView('cards');
-    });
+    result.current.setView('cards');
 
     expect(result.current.view).toBe('cards');
     expect(mockBucket.set).toHaveBeenCalledWith('view', 'cards');
@@ -89,16 +86,10 @@ describe('useCatalogViewState', () => {
       wrapper,
     });
 
-    act(() => {
-      result.current.toggleView();
-    });
-
+    result.current.toggleView();
     expect(result.current.view).toBe('cards');
 
-    act(() => {
-      result.current.toggleView();
-    });
-
+    result.current.toggleView();
     expect(result.current.view).toBe('table');
   });
 
@@ -112,9 +103,7 @@ describe('useCatalogViewState', () => {
 
     expect(result.current.view).toBe('cards');
 
-    act(() => {
-      result.current.setView('table');
-    });
+    result.current.setView('table');
 
     expect(result.current.view).toBe('table');
     expect(mockBucket.set).toHaveBeenCalledWith('view', 'table');
@@ -130,9 +119,7 @@ describe('useCatalogViewState', () => {
 
     expect(result.current.view).toBe('table');
 
-    act(() => {
-      result.current.setView('cards');
-    });
+    result.current.setView('cards');
 
     expect(result.current.view).toBe('cards');
     expect(mockBucket.set).toHaveBeenCalledWith('view', 'cards');
