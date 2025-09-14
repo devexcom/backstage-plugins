@@ -69,6 +69,10 @@ export interface CatalogCardGridProps {
   hasNextPage?: boolean;
   /** Callback to load more items */
   onLoadMore?: () => void;
+  /** Whether more items are currently loading */
+  isLoadingMore?: boolean;
+  /** Callback when entity is clicked */
+  onEntityClick?: (entity: Entity) => void;
   /** Error state */
   error?: Error;
   /** Card density setting */

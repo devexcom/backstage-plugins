@@ -1,354 +1,163 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  makeStyles,
-  useTheme,
-  useMediaQuery,
-} from '@material-ui/core';
-import { FixedSizeGrid as VirtualGrid } from 'react-window';
-import InfiniteLoader from 'react-window-infinite-loader';
-import { Alert } from '@material-ui/lab';
+import { Box, makeStyles, useTheme, useMediaQuery } from '@material-ui/core';
 import { Entity } from '@backstage/catalog-model';
-import { Progress, EmptyState } from '@backstage/core-components';
+import { Progress, EmptyState, ErrorPanel } from '@backstage/core-components';
 import { EntityCard } from './EntityCard';
+import { VirtualizedGrid, EntityCardSkeleton } from './grid';
 import { CatalogCardGridProps } from '../types';
+import {
+  CARD_DIMENSIONS,
+  VIRTUALIZATION,
+  GRID_SPACING,
+  PAGINATION_DEFAULTS,
+} from '../constants';
 
 const useStyles = makeStyles((theme) => ({
-  'container': {
-    width: '100%',
+  container: {
     height: '100%',
   },
-  'grid': {
+  grid: {
     display: 'grid',
-    gap: theme.spacing(2),
-    padding: theme.spacing(1),
+    gap: theme.spacing(GRID_SPACING.GAP),
+    padding: theme.spacing(GRID_SPACING.PADDING),
     gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gridAutoRows: 'minmax(280px, auto)', // Ensure consistent minimum height for all cards
     [theme.breakpoints.down('sm')]: {
       gridTemplateColumns: '1fr',
-      gap: theme.spacing(1),
-      padding: theme.spacing(1, 0.5),
+      gap: theme.spacing(GRID_SPACING.GAP_COMPACT),
+      padding: theme.spacing(
+        GRID_SPACING.PADDING,
+        GRID_SPACING.PADDING_COMPACT,
+      ),
     },
     [theme.breakpoints.up('lg')]: {
       gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
     },
-  },
-  'gridCompact': {
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    [theme.breakpoints.down('sm')]: {
-      gridTemplateColumns: '1fr',
-    },
-    [theme.breakpoints.up('lg')]: {
-      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    [theme.breakpoints.up('xl')]: {
+      gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_DIMENSIONS.MIN_WIDTH}px, 1fr))`,
     },
   },
-  'loadingContainer': {
+  loadingContainer: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing(4),
+    height: '200px',
   },
-  'errorContainer': {
-    margin: theme.spacing(2),
-  },
-  'emptyContainer': {
-    padding: theme.spacing(4),
-    textAlign: 'center',
-  },
-  'loadMoreSentinel': {
-    height: 100,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  'virtualGrid': {
-    '& [data-index]': {
-      padding: theme.spacing(1),
-    },
-  },
-  'skeletonCard': {
-    height: 300,
-    backgroundColor: theme.palette.grey[100],
-    borderRadius: theme.shape.borderRadius,
-    animation: '$skeleton 1.5s ease-in-out infinite',
-  },
-  '@keyframes skeleton': {
-    '0%': {
-      opacity: 0.6,
-    },
-    '50%': {
-      opacity: 0.3,
-    },
-    '100%': {
-      opacity: 0.6,
-    },
+  skeletonGrid: {
+    display: 'grid',
+    gap: theme.spacing(GRID_SPACING.GAP),
+    padding: theme.spacing(GRID_SPACING.PADDING),
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
   },
 }));
 
-const CARD_HEIGHT = 320;
-const CARD_HEIGHT_COMPACT = 280;
-
-interface VirtualCardData {
-  entities: Entity[];
-  columnsCount: number;
-  density: 'compact' | 'comfortable';
-  onCardClick?: (entity: Entity) => void;
-  quickActions?: any[];
-  hasNextPage: boolean;
-  loadMore: () => void;
-}
-
-interface GridVirtualCardProps {
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
-  data: VirtualCardData;
-}
-
-const VirtualCard: React.FC<GridVirtualCardProps> = ({
-  rowIndex,
-  style,
-  data,
-}) => {
-  const index = rowIndex;
-  const {
-    entities,
-    columnsCount,
-    density,
-    onCardClick,
-    quickActions,
-    hasNextPage,
-    loadMore,
-  } = data;
-
-  const entityIndex = index * columnsCount;
-  const isLoadMoreIndex = entityIndex >= entities.length;
-
-  // Trigger load more when approaching the end
-  useEffect(() => {
-    if (isLoadMoreIndex && hasNextPage && entities.length > 0) {
-      loadMore();
-    }
-  }, [isLoadMoreIndex, hasNextPage, entities.length, loadMore]);
-
-  if (isLoadMoreIndex) {
-    return (
-      <div style={style}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100%"
-        >
-          <CircularProgress size={24} />
-        </Box>
-      </div>
-    );
-  }
-
-  return (
-    <div style={style}>
-      <Box display="flex" style={{ gap: '16px' }} height="100%">
-        {Array.from({ length: columnsCount }, (_, colIndex) => {
-          const entity = entities[entityIndex + colIndex];
-          if (!entity) return <div key={colIndex} />;
-
-          return (
-            <Box
-              key={
-                entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`
-              }
-              flex={1}
-            >
-              <EntityCard
-                entity={entity}
-                density={density}
-                onClick={onCardClick}
-                quickActions={quickActions}
-              />
-            </Box>
-          );
-        })}
-      </Box>
-    </div>
-  );
-};
-
 export const CatalogCardGrid: React.FC<CatalogCardGridProps> = ({
-  entities,
-  loading,
-  hasNextPage = false,
-  onLoadMore,
+  entities = [],
+  loading = false,
   error,
   density = 'comfortable',
-  expandDescriptionsDefault = false,
-  quickActions = [],
-  enableVirtualization = false,
-  columns,
+  enableVirtualization = true,
+  hasNextPage = false,
+  isLoadingMore = false,
+  onLoadMore,
+  onEntityClick,
 }) => {
   const classes = useStyles();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Calculate responsive columns
   const columnsCount = useMemo(() => {
-    if (columns) return columns;
     if (isMobile) return 1;
     if (isTablet) return 2;
     return 3;
-  }, [columns, isMobile, isTablet]);
+  }, [isMobile, isTablet]);
 
-  // Intersection observer for infinite scroll
+  // Set up intersection observer for infinite scroll
   useEffect(() => {
-    if (!loadMoreRef.current || !onLoadMore || !hasNextPage || loading) return;
+    if (loading || !hasNextPage || !onLoadMore) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isLoadingMore) {
           onLoadMore();
         }
       },
       { threshold: 0.1 },
     );
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [onLoadMore, hasNextPage, loading]);
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => observerRef.current?.disconnect();
+  }, [loading, hasNextPage, isLoadingMore, onLoadMore]);
+
+  // Loading state
+  if (loading && entities.length === 0) {
+    return (
+      <Box className={classes.skeletonGrid}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <EntityCardSkeleton key={index} density={density} />
+        ))}
+      </Box>
+    );
+  }
 
   // Error state
   if (error) {
-    return (
-      <div className={classes.errorContainer}>
-        <Alert severity="error">
-          <Typography variant="h6">Failed to load catalog entities</Typography>
-          <Typography variant="body2">{error.message}</Typography>
-        </Alert>
-      </div>
-    );
+    return <ErrorPanel title="Failed to load entities" error={error} />;
   }
 
   // Empty state
   if (!loading && entities.length === 0) {
     return (
-      <div className={classes.emptyContainer}>
-        <EmptyState
-          missing="content"
-          title="No entities found"
-          description="No entities match your current filters. Try adjusting your search criteria."
-        />
-      </div>
+      <EmptyState
+        missing="content"
+        title="No entities found"
+        description="No entities match the current filters"
+      />
     );
   }
 
-  // Virtualized grid for large datasets
-  if (enableVirtualization && entities.length > 100) {
-    const cardHeight =
-      density === 'compact' ? CARD_HEIGHT_COMPACT : CARD_HEIGHT;
-    const rowCount = Math.ceil(
-      (entities.length + (hasNextPage ? 1 : 0)) / columnsCount,
-    );
-
-    const itemData = {
-      entities,
-      columnsCount,
-      density,
-      onCardClick: undefined,
-      quickActions,
-      hasNextPage,
-      loadMore: onLoadMore || (() => {}),
-    };
-
+  // Use virtualization for large datasets
+  if (enableVirtualization && entities.length > VIRTUALIZATION.THRESHOLD) {
     return (
-      <div className={classes.container}>
-        <InfiniteLoader
-          isItemLoaded={(index) =>
-            index < Math.ceil(entities.length / columnsCount)
-          }
-          itemCount={hasNextPage ? rowCount + 1 : rowCount}
-          loadMoreItems={onLoadMore || (() => Promise.resolve())}
-        >
-          {({ onItemsRendered, ref }) => (
-            <VirtualGrid
-              ref={ref}
-              className={classes.virtualGrid}
-              height={600} // Fixed height for virtualization
-              width={1200} // Fixed width for virtualization
-              columnCount={1}
-              columnWidth={1200}
-              rowCount={rowCount}
-              rowHeight={cardHeight + 32} // Add gap
-              itemData={itemData}
-              onItemsRendered={({
-                visibleRowStartIndex,
-                visibleRowStopIndex,
-              }) =>
-                onItemsRendered({
-                  startIndex: visibleRowStartIndex,
-                  stopIndex: visibleRowStopIndex,
-                })
-              }
-            >
-              {VirtualCard}
-            </VirtualGrid>
-          )}
-        </InfiniteLoader>
-      </div>
+      <VirtualizedGrid
+        entities={entities}
+        columnsCount={columnsCount}
+        density={density}
+        hasNextPage={hasNextPage}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={onLoadMore || (() => {})}
+        onEntityClick={onEntityClick}
+      />
     );
   }
 
-  // Regular grid with infinite scroll
+  // Regular grid for smaller datasets
   return (
-    <div className={classes.container}>
-      <div
-        className={`${classes.grid} ${density === 'compact' ? classes.gridCompact : ''}`}
-      >
+    <Box className={classes.container}>
+      <Box className={classes.grid}>
         {entities.map((entity) => (
           <EntityCard
-            key={
-              entity.metadata.uid || `${entity.kind}-${entity.metadata.name}`
-            }
+            key={entity.metadata.uid}
             entity={entity}
             density={density}
-            expandDescriptionDefault={expandDescriptionsDefault}
-            quickActions={quickActions}
+            onClick={onEntityClick}
           />
         ))}
+      </Box>
 
-        {/* Loading skeletons */}
-        {loading && (
-          <>
-            {Array.from(
-              { length: Math.min(6, columnsCount * 2) },
-              (_, index) => (
-                <div
-                  key={`skeleton-${index}`}
-                  className={classes.skeletonCard}
-                />
-              ),
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Load more sentinel */}
-      {hasNextPage && !loading && (
-        <div ref={loadMoreRef} className={classes.loadMoreSentinel}>
-          <CircularProgress size={24} />
-          <Typography variant="body2" style={{ marginLeft: 8 }}>
-            Loading more...
-          </Typography>
+      {/* Load more trigger for infinite scroll */}
+      {hasNextPage && (
+        <div ref={loadMoreRef} className={classes.loadingContainer}>
+          {isLoadingMore && <Progress />}
         </div>
       )}
-
-      {/* Loading indicator */}
-      {loading && entities.length === 0 && (
-        <div className={classes.loadingContainer}>
-          <Progress />
-        </div>
-      )}
-    </div>
+    </Box>
   );
 };

@@ -2,7 +2,7 @@
 
 A Backstage plugin that provides a rich card view for the software catalog with infinite scroll and entity kind filtering.
 
-![alt text](assets/cards-v2.png)
+![alt text](assets/cardsv2.png)
 
 ## Features
 
