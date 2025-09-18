@@ -44,7 +44,7 @@
     "husky": "^8.0.3",
     "lint-staged": "^16.1.6",
     "prettier": "^3.0.0",
-    "typescript": "~5.2.0"
+    "typescript": "~5.9.2"
   },
   "resolutions": {
     "@types/react": "^18",
