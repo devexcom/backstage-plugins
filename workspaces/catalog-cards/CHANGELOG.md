@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.3
+
+### Patch Changes
+
+- 12f340c: Fix catalog card height inconsistency and improve component architecture
+  - Fixed card height inconsistency where cards with short descriptions appeared taller
+  - Added consistent minimum card heights using gridAutoRows
+  - Refactored components into modular architecture for better maintainability
+  - Enhanced professional styling with improved color schemes
+
+- c5309fe: Publish version 0.1.2 with enhanced features
+  - Enhanced UX design and search functionality
+  - Professional color schemes and layout improvements
+  - Modern React 18 compatible testing
+  - All dependencies fixed for CI environments
+
 ## 0.1.2
 
 ### Patch Changes
