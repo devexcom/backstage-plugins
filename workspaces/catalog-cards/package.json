@@ -1,6 +1,6 @@
 {
   "name": "@devexcom/plugin-catalog-cards",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A professional Backstage plugin that provides a rich card view for the catalog with real-time search, infinite scroll, and modern UX design",
   "main": "dist/index.esm.js",
   "types": "dist/index.d.ts",
