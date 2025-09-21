@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { InfoCard } from '@backstage/core-components';
+import { useSearch } from '@backstage/plugin-search-react';
 import {
   Box,
   Typography,
-  Paper,
   FormControl,
-  // FormLabel,
   FormGroup,
   FormControlLabel,
   Checkbox,
@@ -15,8 +15,7 @@ import {
   Chip,
   makeStyles,
 } from '@material-ui/core';
-import { ExpandMore as ExpandMoreIcon } from '@material-ui/icons';
-import { useSearch } from '@backstage/plugin-search-react';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -124,127 +123,118 @@ export const SearchFilters = () => {
 
   return (
     <Box className={classes.container}>
-      <Paper elevation={1}>
-        <Box p={2}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={1}
-          >
-            <Typography variant="h6">Filters</Typography>
-            {activeFilterCount > 0 && (
-              <Chip
-                size="small"
-                label={`${activeFilterCount} active`}
-                variant="outlined"
-                onDelete={clearAllFilters}
-              />
-            )}
-          </Box>
+      <InfoCard
+        title="Filters"
+        action={
+          activeFilterCount > 0 ? (
+            <Chip
+              size="small"
+              label={`${activeFilterCount} active`}
+              variant="outlined"
+              onDelete={clearAllFilters}
+            />
+          ) : undefined
+        }
+      >
+        <Accordion className={classes.filterSection} defaultExpanded>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle2">Content Type</Typography>
+          </AccordionSummary>
+          <AccordionDetails className={classes.filterContent}>
+            <FormControl component="fieldset" className={classes.filterGroup}>
+              <FormGroup>
+                {DOCUMENT_TYPES.map((type) => (
+                  <FormControlLabel
+                    key={type.value}
+                    control={
+                      <Checkbox
+                        checked={((filters.type as string[]) || []).includes(
+                          type.value,
+                        )}
+                        onChange={(e) =>
+                          handleTypeChange(type.value, e.target.checked)
+                        }
+                        size="small"
+                      />
+                    }
+                    label={
+                      <Box className={classes.facetItem}>
+                        <span>{type.label}</span>
+                        {type.count > 0 && (
+                          <Box className={classes.facetCount}>{type.count}</Box>
+                        )}
+                      </Box>
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
 
-          <Accordion className={classes.filterSection} defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle2">Content Type</Typography>
-            </AccordionSummary>
-            <AccordionDetails className={classes.filterContent}>
-              <FormControl component="fieldset" className={classes.filterGroup}>
-                <FormGroup>
-                  {DOCUMENT_TYPES.map((type) => (
-                    <FormControlLabel
-                      key={type.value}
-                      control={
-                        <Checkbox
-                          checked={((filters.type as string[]) || []).includes(
-                            type.value,
-                          )}
-                          onChange={(e) =>
-                            handleTypeChange(type.value, e.target.checked)
-                          }
-                          size="small"
-                        />
-                      }
-                      label={
-                        <Box className={classes.facetItem}>
-                          <span>{type.label}</span>
-                          {type.count > 0 && (
-                            <Box className={classes.facetCount}>
-                              {type.count}
-                            </Box>
-                          )}
-                        </Box>
-                      }
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            </AccordionDetails>
-          </Accordion>
+        <Accordion className={classes.filterSection}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle2">Lifecycle</Typography>
+          </AccordionSummary>
+          <AccordionDetails className={classes.filterContent}>
+            <FormControl component="fieldset" className={classes.filterGroup}>
+              <FormGroup>
+                {LIFECYCLE_STAGES.map((lifecycle) => (
+                  <FormControlLabel
+                    key={lifecycle.value}
+                    control={
+                      <Checkbox
+                        checked={(
+                          (filters.lifecycle as string[]) || []
+                        ).includes(lifecycle.value)}
+                        onChange={(e) =>
+                          handleLifecycleChange(
+                            lifecycle.value,
+                            e.target.checked,
+                          )
+                        }
+                        size="small"
+                      />
+                    }
+                    label={
+                      <Box className={classes.facetItem}>
+                        <span>{lifecycle.label}</span>
+                        {lifecycle.count > 0 && (
+                          <Box className={classes.facetCount}>
+                            {lifecycle.count}
+                          </Box>
+                        )}
+                      </Box>
+                    }
+                  />
+                ))}
+              </FormGroup>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
 
-          <Accordion className={classes.filterSection}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle2">Lifecycle</Typography>
-            </AccordionSummary>
-            <AccordionDetails className={classes.filterContent}>
-              <FormControl component="fieldset" className={classes.filterGroup}>
-                <FormGroup>
-                  {LIFECYCLE_STAGES.map((lifecycle) => (
-                    <FormControlLabel
-                      key={lifecycle.value}
-                      control={
-                        <Checkbox
-                          checked={(
-                            (filters.lifecycle as string[]) || []
-                          ).includes(lifecycle.value)}
-                          onChange={(e) =>
-                            handleLifecycleChange(
-                              lifecycle.value,
-                              e.target.checked,
-                            )
-                          }
-                          size="small"
-                        />
-                      }
-                      label={
-                        <Box className={classes.facetItem}>
-                          <span>{lifecycle.label}</span>
-                          {lifecycle.count > 0 && (
-                            <Box className={classes.facetCount}>
-                              {lifecycle.count}
-                            </Box>
-                          )}
-                        </Box>
-                      }
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion className={classes.filterSection}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="subtitle2">Owner</Typography>
-            </AccordionSummary>
-            <AccordionDetails className={classes.filterContent}>
-              <TextField
-                className={classes.searchField}
-                size="small"
-                placeholder="Filter by owner..."
-                value={ownerFilter}
-                onChange={(e) => setOwnerFilter(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleOwnerFilter(ownerFilter);
-                  }
-                }}
-                onBlur={() => handleOwnerFilter(ownerFilter)}
-                variant="outlined"
-              />
-            </AccordionDetails>
-          </Accordion>
-        </Box>
-      </Paper>
+        <Accordion className={classes.filterSection}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle2">Owner</Typography>
+          </AccordionSummary>
+          <AccordionDetails className={classes.filterContent}>
+            <TextField
+              className={classes.searchField}
+              size="small"
+              placeholder="Filter by owner..."
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleOwnerFilter(ownerFilter);
+                }
+              }}
+              onBlur={() => handleOwnerFilter(ownerFilter)}
+              variant="outlined"
+            />
+          </AccordionDetails>
+        </Accordion>
+      </InfoCard>
     </Box>
   );
 };
