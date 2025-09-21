@@ -1,0 +1,74 @@
+{
+  "name": "@devexcom/plugin-search-opensearch",
+  "version": "0.1.0",
+  "description": "Modern OpenSearch-powered search interface for Backstage with facets, highlighting, and enhanced UX",
+  "main": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.esm.js",
+    "types": "dist/index.d.ts"
+  },
+  "backstage": {
+    "role": "frontend-plugin",
+    "pluginId": "search-opensearch",
+    "pluginPackages": [
+      "@devexcom/plugin-search-opensearch"
+    ]
+  },
+  "sideEffects": false,
+  "scripts": {
+    "start": "backstage-cli package start",
+    "build": "backstage-cli package build",
+    "tsc": "tsc --build --verbose",
+    "lint": "backstage-cli package lint",
+    "test": "backstage-cli package test",
+    "clean": "backstage-cli package clean",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack"
+  },
+  "dependencies": {
+    "react-use": "^17.2.4",
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "@backstage/core-components": "^0.13.10",
+    "@backstage/core-plugin-api": "^1.8.2",
+    "@backstage/plugin-search-react": "^1.7.8",
+    "@backstage/plugin-search-common": "^1.2.8",
+    "@backstage/theme": "^0.5.0",
+    "@material-ui/core": "^4.12.2",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.61",
+    "react": "^16.13.1 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.13.1 || ^17.0.0 || ^18.0.0",
+    "react-router-dom": "^6.0.0"
+  },
+  "devDependencies": {
+    "@backstage/cli": "^0.26.0",
+    "@backstage/dev-utils": "^1.0.31",
+    "@backstage/test-utils": "^1.4.7",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/lodash": "^4.14.195",
+    "@types/react": "*",
+    "@types/react-dom": "*"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devexcom/backstage-plugins",
+    "directory": "workspaces/search-opensearch"
+  },
+  "keywords": [
+    "backstage",
+    "search",
+    "opensearch",
+    "frontend",
+    "ui"
+  ]
+}
