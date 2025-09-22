@@ -157,21 +157,21 @@ export class OpenSearchIndexer extends Writable {
                     resourceRef: { type: 'keyword' },
                   },
                 },
-                // Dynamic templates for flexible document types
-                'dynamic_templates': [
-                  {
-                    strings: {
-                      match_mapping_type: 'string',
-                      mapping: {
-                        type: 'text',
-                        fields: {
-                          keyword: { type: 'keyword', ignore_above: 256 },
-                        },
+              },
+              // Dynamic templates for flexible document types
+              dynamic_templates: [
+                {
+                  strings: {
+                    match_mapping_type: 'string',
+                    mapping: {
+                      type: 'text',
+                      fields: {
+                        keyword: { type: 'keyword', ignore_above: 256 },
                       },
                     },
                   },
-                ],
-              },
+                },
+              ],
             },
           },
         });
