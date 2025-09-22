@@ -97,21 +97,13 @@ yarn add @devexcom/plugin-search-backend-module-opensearch
 Add to your `app-config.yaml`:
 
 ```yaml
-# OpenSearch configuration for enhanced search
 search:
   opensearch:
     endpoint: http://localhost:9200
     auth:
-      type: basic
-      username: admin
-      password: admin
-    # Alternative: no auth for local development
-    # auth:
-    #   type: none
+      type: none
     indexPrefix: backstage
     batchSize: 100
-    ssl:
-      verifyHostname: false
 ```
 
 ## Backend Setup
@@ -130,18 +122,52 @@ backend.add(import('@backstage/plugin-search-backend-module-catalog'));
 backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 ```
 
-## Docker Setup
+## OpenSearch Setup
+
+**Development (No Auth):**
+
+```bash
+docker run -d \
+  --name backstage-opensearch \
+  -p 9200:9200 -p 9600:9600 \
+  -e "discovery.type=single-node" \
+  -e "DISABLE_SECURITY_PLUGIN=true" \
+  opensearchproject/opensearch:2.11.0
+```
+
+**Production (With Auth):**
+
+```bash
+docker run -d \
+  --name backstage-opensearch \
+  -p 9200:9200 -p 9600:9600 \
+  -e "discovery.type=single-node" \
+  -e "plugins.security.ssl.http.enabled=false" \
+  opensearchproject/opensearch:2.11.0
+```
+
+**Configuration:**
 
 ```yaml
-version: '3.8'
-services:
+search:
   opensearch:
-    image: opensearchproject/opensearch:2.11.0
-    environment:
-      - discovery.type=single-node
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
-    ports:
-      - '9200:9200'
+    endpoint: http://localhost:9200
+    auth:
+      type: basic
+      username: admin
+      password: admin # Default credentials
+    indexPrefix: backstage
+    batchSize: 100
+```
+
+**Test Connection:**
+
+```bash
+# Without auth
+curl http://localhost:9200
+
+# With auth
+curl -u admin:admin http://localhost:9200
 ```
 
 ## Technical Benefits
@@ -173,12 +199,43 @@ This plugin includes a fix for pagination issues where clicking next/previous pa
 
 By default, Location entities are excluded from search results to reduce noise. This can be modified in the translator if needed.
 
+### Initial Indexing
+
+After starting Backstage with OpenSearch for the first time, indexing tasks run every 10 minutes. **It may take a few minutes before search results appear**. You can monitor indexing progress:
+
+```bash
+# Check if indices are created
+curl -u admin:admin "http://localhost:9200/_cat/indices/backstage*"
+
+# Check document count
+curl -u admin:admin "http://localhost:9200/backstage-software-catalog/_count"
+```
+
+The first indexing cycle completes within 1-2 minutes after backend startup.
+
 ## Troubleshooting
 
-**Connection Issues**: Ensure OpenSearch is running and accessible at the configured endpoint.
+**No search results after setup:**
 
-**No Results**: Check that indexing tasks are running and entities are being indexed.
+1. Check OpenSearch is running: `curl http://localhost:9200`
+2. Check backend logs for indexing messages
+3. Verify indices exist: `curl http://localhost:9200/_cat/indices/backstage*`
+4. Wait 1-2 minutes for initial indexing
 
-**Permission Errors**: Verify OpenSearch authentication credentials in your config.
+**Connection refused errors:**
 
-**Search Modal Not Working**: Use the dedicated search page at `/search` instead of the modal.
+- OpenSearch not running or wrong port
+- Use OpenSearch 2.11.0, not 3.x versions
+- Ensure `DISABLE_SECURITY_PLUGIN=true` for simple setup
+
+**Mapping parsing errors:**
+
+- Use OpenSearch 2.11.0 specifically
+- Delete indices if upgrading: `curl -X DELETE http://localhost:9200/backstage*`
+- Restart Backstage backend after OpenSearch changes
+
+**Performance issues:**
+
+- Check catalog has entities to index
+- Monitor backend logs for indexing progress
+- Use `/search` page, not search modal
