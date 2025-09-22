@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  SearchResult,
+  useSearch,
   DefaultResultListItem,
 } from '@backstage/plugin-search-react';
 import { Box, Typography, makeStyles } from '@material-ui/core';
@@ -27,56 +27,57 @@ const useStyles = makeStyles((theme) => ({
 
 export const SearchResults = () => {
   const classes = useStyles();
+  const { result } = useSearch();
+
+  if (result.loading) {
+    return <Progress />;
+  }
+
+  if (result.error) {
+    return (
+      <Box className={classes.noResults}>
+        <Typography color="error">
+          Error loading search results: {result.error.message}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!result.value) {
+    return (
+      <Box className={classes.noResults}>
+        <Typography variant="h6">No results found</Typography>
+        <Typography>Try adjusting your search terms or filters</Typography>
+      </Box>
+    );
+  }
+
+  const results = result.value.results || [];
+  if (results.length === 0) {
+    return (
+      <Box className={classes.noResults}>
+        <Typography variant="h6">No results found</Typography>
+        <Typography>Try adjusting your search terms or filters</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box className={classes.container}>
-      <SearchResult>
-        {({ loading, error, value }) => {
-          if (loading) {
-            return <Progress />;
-          }
+      <Box className={classes.resultsHeader}>
+        <Typography variant="h6">
+          Found {results.length} result{results.length !== 1 ? 's' : ''}
+        </Typography>
+      </Box>
 
-          if (error) {
-            return (
-              <Box className={classes.noResults}>
-                <Typography color="error">
-                  Error loading search results: {error.message}
-                </Typography>
-              </Box>
-            );
-          }
-
-          if (!value || value.length === 0) {
-            return (
-              <Box className={classes.noResults}>
-                <Typography variant="h6">No results found</Typography>
-                <Typography>
-                  Try adjusting your search terms or filters
-                </Typography>
-              </Box>
-            );
-          }
-
-          return (
-            <>
-              <Box className={classes.resultsHeader}>
-                <Typography variant="h6">
-                  Found {value.length} result{value.length !== 1 ? 's' : ''}
-                </Typography>
-              </Box>
-
-              {value.map((result, index) => (
-                <DefaultResultListItem
-                  key={`${result.type}-${result.document?.location || index}`}
-                  result={result}
-                  highlight={result.highlight}
-                  rank={index + 1}
-                />
-              ))}
-            </>
-          );
-        }}
-      </SearchResult>
+      {results.map((searchResult: any, index: number) => (
+        <DefaultResultListItem
+          key={`${searchResult.type}-${searchResult.document?.location || index}`}
+          result={searchResult}
+          highlight={searchResult.highlight}
+          rank={index + 1}
+        />
+      ))}
     </Box>
   );
 };
