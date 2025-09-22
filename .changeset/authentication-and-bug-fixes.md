@@ -11,3 +11,4 @@ Add OpenSearch authentication support and fix critical bugs
 - Add comprehensive authentication documentation for both development and production
 - Include indexing progress monitoring commands and timing expectations
 - Resolve TypeScript compilation errors in frontend components
+- Add smart build script that only builds changed plugins to improve CI performance
