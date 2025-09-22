@@ -34,10 +34,68 @@ export const SearchResults = () => {
   }
 
   if (result.error) {
+    const errorMessage = result.error.message || 'Unknown error occurred';
+    const errorName = (result.error as any).name || 'Error';
+
+    // Enhanced error display based on error type
+    const getErrorDisplay = () => {
+      if (errorMessage.includes('OpenSearch service is not available')) {
+        return {
+          title: 'Search Service Unavailable',
+          message: 'The search service is currently offline.',
+          suggestion: 'Please contact your administrator or try again later.',
+          icon: '🔌',
+        };
+      }
+
+      if (errorMessage.includes('hostname could not be resolved')) {
+        return {
+          title: 'Configuration Error',
+          message: 'Search service configuration issue.',
+          suggestion: 'Please contact your administrator.',
+          icon: '⚙️',
+        };
+      }
+
+      if (errorMessage.includes('authentication failed')) {
+        return {
+          title: 'Authentication Error',
+          message: 'Search service authentication failed.',
+          suggestion: 'Please contact your administrator.',
+          icon: '🔐',
+        };
+      }
+
+      if (errorMessage.includes('timed out')) {
+        return {
+          title: 'Search Timeout',
+          message: 'The search took too long to complete.',
+          suggestion: 'Try simplifying your search terms or try again.',
+          icon: '⏱️',
+        };
+      }
+
+      return {
+        title: 'Search Error',
+        message: errorMessage,
+        suggestion:
+          'Please try again or contact support if the problem persists.',
+        icon: '❌',
+      };
+    };
+
+    const errorDisplay = getErrorDisplay();
+
     return (
       <Box className={classes.noResults}>
-        <Typography color="error">
-          Error loading search results: {result.error.message}
+        <Typography variant="h6" color="error" gutterBottom>
+          {errorDisplay.icon} {errorDisplay.title}
+        </Typography>
+        <Typography color="textSecondary" gutterBottom>
+          {errorDisplay.message}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {errorDisplay.suggestion}
         </Typography>
       </Box>
     );
