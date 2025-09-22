@@ -211,12 +211,64 @@ export class OpenSearchEngine implements SearchEngine {
         facets,
       };
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error('OpenSearch query failed', {
         term: query.term,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         duration: Date.now() - startTime,
       });
-      throw error;
+
+      // Provide user-friendly error messages based on error type
+      if (errorMessage.includes('ECONNREFUSED')) {
+        const enhancedError = new Error(
+          'OpenSearch service is not available. Please ensure OpenSearch is running on the configured endpoint.',
+        );
+        enhancedError.name = 'ConnectionError';
+        throw enhancedError;
+      }
+
+      if (errorMessage.includes('ENOTFOUND')) {
+        const enhancedError = new Error(
+          'OpenSearch hostname could not be resolved. Please check your OpenSearch configuration.',
+        );
+        enhancedError.name = 'ConfigurationError';
+        throw enhancedError;
+      }
+
+      if (
+        errorMessage.includes('401') ||
+        errorMessage.includes('Unauthorized')
+      ) {
+        const enhancedError = new Error(
+          'OpenSearch authentication failed. Please check your credentials.',
+        );
+        enhancedError.name = 'AuthenticationError';
+        throw enhancedError;
+      }
+
+      if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+        const enhancedError = new Error(
+          'Access denied to OpenSearch. Please check your permissions.',
+        );
+        enhancedError.name = 'AuthorizationError';
+        throw enhancedError;
+      }
+
+      if (errorMessage.includes('timeout')) {
+        const enhancedError = new Error(
+          'OpenSearch query timed out. The service may be overloaded or the query too complex.',
+        );
+        enhancedError.name = 'TimeoutError';
+        throw enhancedError;
+      }
+
+      // For unknown errors, provide a helpful generic message
+      const enhancedError = new Error(
+        `OpenSearch query failed: ${errorMessage}. Please check your OpenSearch configuration and service status.`,
+      );
+      enhancedError.name = 'SearchError';
+      throw enhancedError;
     }
   }
 }
