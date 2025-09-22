@@ -11,7 +11,7 @@
     "dev": "backstage-cli package start",
     "start": "backstage-cli package start",
     "build": "backstage-cli package build",
-    "build:all": "./scripts/generate-types.sh && yarn workspaces run build",
+    "build:all": "./scripts/build-changed-plugins.sh",
     "lint": "backstage-cli package lint",
     "lint:fix": "backstage-cli package lint --fix",
     "lint:all": "yarn workspaces run lint",
