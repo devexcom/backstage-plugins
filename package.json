@@ -39,7 +39,7 @@
     "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "concurrently": "^8.0.0",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.1",
     "husky": "^8.0.3",
     "lint-staged": "^16.1.6",
