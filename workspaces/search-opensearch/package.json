@@ -54,7 +54,7 @@
     "@backstage/plugin-search-common": "^1.2.8",
     "@backstage/test-utils": "^1.4.7",
     "@testing-library/jest-dom": "^6.0.0",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.0.0",
     "@types/lodash": "^4.14.195",
     "@types/react": "*",
